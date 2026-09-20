@@ -16,8 +16,12 @@ def command(app_settings: AppSettings) -> tuple[str, ...]:
     return tuple(builder.build())
 
 
+def test_the_program_name_leads_the_arguments(command: tuple[str, ...]) -> None:
+    assert command[0] == "copyparty"
+
+
 def test_the_configuration_file_is_passed(command: tuple[str, ...]) -> None:
-    assert command[:2] == ("-c", "/etc/rsc/config/copyparty.conf")
+    assert command[1:3] == ("-c", "/etc/rsc/config/copyparty.conf")
 
 
 def test_the_port_comes_from_the_settings(command: tuple[str, ...]) -> None:

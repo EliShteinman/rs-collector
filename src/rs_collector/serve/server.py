@@ -23,6 +23,7 @@ class DisplayServerCommandBuilder:
 
     def build(self) -> Sequence[str]:
         return (
+            _PROGRAM_NAME,
             _CONFIG_FLAG,
             str(self._config_file),
             _HOST_FLAG,
