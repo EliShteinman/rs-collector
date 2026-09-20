@@ -107,3 +107,17 @@ class FakeHostConnector:
         if session is None:
             raise SshConnectionError(f"{host} refused the connection")
         return session
+
+
+class FakeProcessRunner:
+    def __init__(self, exit_status: int = 0, error: Exception | None = None) -> None:
+        self.exit_status = exit_status
+        self.error = error
+        self.calls: list[tuple[tuple[str, ...], Path, Path, int]] = []
+
+    def run(self, command: Iterable[str], cwd: Path, log_path: Path, timeout_seconds: int) -> int:
+        self.calls.append((tuple(command), cwd, log_path, timeout_seconds))
+        if self.error is not None:
+            raise self.error
+        log_path.write_text("analyzer output\n", encoding="utf-8")
+        return self.exit_status
