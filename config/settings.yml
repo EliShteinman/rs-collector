@@ -1,0 +1,27 @@
+storage:
+  data_root: /data/redisscope
+  packages_dir_name: packages
+  analyses_dir_name: analyses
+  locks_dir_name: locks
+
+remote:
+  rladmin_path: /opt/redislabs/bin/rladmin
+  remote_tmp_dir: /tmp
+  connect_timeout_seconds: 10
+  command_timeout_seconds: 60
+  debug_info_timeout_seconds: 1800
+  auto_accept_host_keys: true
+  root_prompt_timeout_seconds: 30
+
+analysis:
+  redisscope_binary: /opt/redisscope/redisscope
+  timeout_seconds: 7200
+  console_log_name: analysis_console.log
+
+retention:
+  max_age_days: 7
+
+serve:
+  host: 0.0.0.0
+  port: 3923
+  share_name: analyses

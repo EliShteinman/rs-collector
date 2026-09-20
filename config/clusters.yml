@@ -1,0 +1,12 @@
+environments:
+  production:
+    - fqdn: cluster1.example.com
+      nodes:
+        - node1.cluster1.example.com
+        - node2.cluster1.example.com
+        - node3.cluster1.example.com
+  staging:
+    - fqdn: cluster2.example.com
+      nodes:
+        - node1.cluster2.example.com
+        - node2.cluster2.example.com

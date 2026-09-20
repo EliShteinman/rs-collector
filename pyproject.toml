@@ -1,0 +1,81 @@
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rs-collector"
+version = "0.1.0"
+description = "Collect Redis Enterprise support packages and analyze them with RedisScope"
+requires-python = ">=3.14"
+dependencies = [
+    "pydantic>=2.12",
+    "pydantic-settings>=2.11",
+    "PyYAML>=6.0.3",
+    "paramiko>=4.0",
+    "copyparty>=1.19",
+]
+
+[project.scripts]
+rsc = "rs_collector.cli.app:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.4",
+    "pytest-cov>=7.0",
+    "pytest-mock>=3.15",
+    "ruff>=0.14",
+    "pre-commit>=4.3",
+]
+build = [
+    "pyinstaller>=6.16",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "N",
+    "UP",
+    "B",
+    "A",
+    "C4",
+    "SIM",
+    "RET",
+    "ARG",
+    "PTH",
+    "TID",
+    "RUF",
+]
+ignore = ["N818"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["ARG001", "ARG002"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "unit: isolated component tests",
+    "integration: tests across several components",
+    "e2e: full workflow tests",
+]
+addopts = "--strict-markers"
+
+[tool.coverage.run]
+source = ["rs_collector"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
