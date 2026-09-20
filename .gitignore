@@ -168,3 +168,7 @@ redisscope-1.28.27-rhel9
 # RedisScope collector
 .env
 data/
+
+# The vendored wheels are part of the release
+!vendor/wheels/
+!vendor/wheels/*.whl
