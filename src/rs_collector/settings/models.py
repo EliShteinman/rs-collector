@@ -45,6 +45,9 @@ class StorageSettings(BaseModel):
     packages_dir_name: str
     analyses_dir_name: str
     locks_dir_name: str
+    package_archive_name: str
+    package_metadata_name: str
+    analysis_metadata_name: str
 
     @property
     def packages_dir(self) -> Path:
