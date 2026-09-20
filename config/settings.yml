@@ -11,6 +11,7 @@ remote:
   command_timeout_seconds: 60
   debug_info_timeout_seconds: 1800
   auto_accept_host_keys: true
+  sudo_prompt_wait_seconds: 5
   root_prompt_timeout_seconds: 30
 
 analysis:
