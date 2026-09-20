@@ -26,3 +26,15 @@ def test_paths_expose_every_configuration_file(tmp_path: Path) -> None:
     assert paths.settings_file.name == "settings.yml"
     assert paths.clusters_file.name == "clusters.yml"
     assert paths.logging_file.name == "logging.yml"
+
+
+def test_a_blank_environment_variable_is_ignored(
+    monkeypatch: pytest.MonkeyPatch, clean_environment: None
+) -> None:
+    monkeypatch.setenv("RSC_CONFIG_DIR", "  ")
+
+    assert ConfigPathsResolver().resolve().config_dir == BundleLocator().root() / "config"
+
+
+def test_the_env_file_sits_next_to_the_configuration_directory(tmp_path: Path) -> None:
+    assert ConfigPaths(config_dir=tmp_path / "config").env_file == tmp_path / "rsc.env"

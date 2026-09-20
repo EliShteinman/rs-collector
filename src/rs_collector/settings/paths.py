@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from rs_collector.runtime.bundle import BundleLocator
@@ -17,6 +17,13 @@ class ConfigDirSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="RSC_", extra="ignore")
 
     config_dir: Path | None = Field(default=None)
+
+    @field_validator("config_dir", mode="before")
+    @classmethod
+    def _ignore_a_blank_value(cls, value: object) -> object:
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value
 
 
 class ConfigPaths(BaseModel):
