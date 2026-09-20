@@ -168,4 +168,3 @@ redisscope-1.28.27-rhel9
 # RedisScope collector
 .env
 data/
-vendor/wheels/*.whl

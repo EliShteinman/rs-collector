@@ -1,0 +1,21 @@
+[Unit]
+Description=RedisScope collector display server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=rsc
+Group=rsc
+Environment=RSC_CONFIG_DIR=/etc/rsc/config
+ExecStart=/opt/rsc/bin/rsc serve
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/data/redisscope
+
+[Install]
+WantedBy=multi-user.target

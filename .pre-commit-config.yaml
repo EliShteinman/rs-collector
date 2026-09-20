@@ -12,3 +12,5 @@ repos:
       - id: trailing-whitespace
       - id: check-yaml
       - id: check-added-large-files
+        args: [--maxkb=6000]
+        exclude: ^vendor/

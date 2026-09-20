@@ -42,7 +42,7 @@ class Container:
         self._paths = paths or ConfigPathsResolver().resolve()
         self._console = console or StandardConsole()
         self._settings = SettingsLoader(self._paths).load()
-        self._credentials = SshCredentials()
+        self._credentials = SshCredentials.load(self._paths.env_file)
         self._inventory: InventoryRepository = CachingInventoryRepository(
             YamlInventoryRepository(self._paths)
         )
