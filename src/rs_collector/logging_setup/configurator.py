@@ -4,7 +4,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from rs_collector.exceptions.configuration import ConfigValidationError
+from rs_collector.exceptions.configuration import ConfigurationError, ConfigValidationError
 from rs_collector.logging_setup.models import LoggingConfig
 from rs_collector.settings.paths import ConfigPaths
 from rs_collector.settings.yaml_documents import YamlDocumentLoader
@@ -33,7 +33,12 @@ class LoggingConfigurator:
 
     def _create_log_directories(self, config: LoggingConfig, log_dir: Path) -> None:
         for file_path in config.file_handler_paths(log_dir):
-            file_path.parent.mkdir(parents=True, exist_ok=True)
+            try:
+                file_path.parent.mkdir(parents=True, exist_ok=True)
+            except OSError as error:
+                raise ConfigurationError(
+                    f"The log directory {file_path.parent} cannot be created: {error}"
+                ) from error
 
 
 class LoggerFactory:

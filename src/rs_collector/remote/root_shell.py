@@ -77,15 +77,14 @@ class RootShell:
             ) from error
 
     def _answer_password_prompt(self) -> None:
+        if self._sudo_password is None:
+            self._logger.debug("No sudo password is configured, expecting passwordless sudo")
+            return
         try:
             self._reader.read_until_any(_PASSWORD_PROMPTS, self._settings.sudo_prompt_wait_seconds)
         except RemoteCommandTimeoutError:
             self._logger.debug("No sudo password prompt appeared")
             return
-        if self._sudo_password is None:
-            raise RootEscalationError(
-                "The remote host asked for a sudo password but RSC_SUDO_PASSWORD is not set"
-            )
         self._send_line(self._sudo_password.get_secret_value())
 
     def _verify_root(self) -> None:
@@ -96,7 +95,7 @@ class RootShell:
         if result.first_line() != _ROOT_USER_ID:
             raise RootEscalationError(
                 f"'{_ESCALATION_COMMAND}' did not produce a root shell (id -u said "
-                f"'{result.first_line()}')"
+                f"'{result.first_line()}'). Set RSC_SUDO_PASSWORD if sudo asks for a password."
             )
 
     def _send_line(self, line: str) -> None:

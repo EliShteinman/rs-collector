@@ -47,7 +47,9 @@ def test_escalate_answers_the_password_prompt(app_settings: AppSettings) -> None
     assert "secret" in channel.sent
 
 
-def test_escalate_rejects_a_password_prompt_without_a_password(app_settings: AppSettings) -> None:
+def test_escalate_reports_a_shell_that_stays_stuck_on_the_password_prompt(
+    app_settings: AppSettings,
+) -> None:
     channel = ScriptedShellChannel({"sudo su -": "[sudo] password for admin: "})
 
     with pytest.raises(RootEscalationError):
