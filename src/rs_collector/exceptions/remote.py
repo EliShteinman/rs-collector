@@ -35,3 +35,7 @@ class FileTransferError(RemoteError):
 
 class TransferIntegrityError(FileTransferError):
     pass
+
+
+class RootSessionClosedError(RemoteError):
+    pass

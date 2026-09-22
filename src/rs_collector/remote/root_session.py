@@ -3,6 +3,7 @@ from typing import Self
 
 from pydantic import SecretStr
 
+from rs_collector.exceptions.remote import RootSessionClosedError
 from rs_collector.logging_setup.configurator import LoggerFactory
 from rs_collector.remote.channel_reader import ChannelReader
 from rs_collector.remote.cluster_connector import ClusterConnection
@@ -47,7 +48,7 @@ class RootSession:
     @property
     def shell(self) -> RootShell:
         if self._shell is None:
-            raise RuntimeError("The root session is not open")
+            raise RootSessionClosedError("The root session is not open")
         return self._shell
 
     @property

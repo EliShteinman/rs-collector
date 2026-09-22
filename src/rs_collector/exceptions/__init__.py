@@ -37,6 +37,7 @@ from rs_collector.exceptions.remote import (
     RemoteCommandTimeoutError,
     RemoteError,
     RootEscalationError,
+    RootSessionClosedError,
     SshConnectionError,
     TransferIntegrityError,
 )
@@ -90,6 +91,7 @@ __all__ = [
     "RemoteCommandTimeoutError",
     "RemoteError",
     "RootEscalationError",
+    "RootSessionClosedError",
     "RsCollectorError",
     "RunningAsRootError",
     "SelectionAbortedError",
