@@ -13,6 +13,7 @@ class SshCredentials(BaseSettings):
         env_prefix="RSC_",
         env_file=_LOCAL_ENV_FILE,
         env_file_encoding="utf-8",
+        env_ignore_empty=True,
         extra="ignore",
     )
 

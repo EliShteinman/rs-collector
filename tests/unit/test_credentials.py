@@ -47,3 +47,12 @@ def test_a_missing_user_is_reported(clean_environment: None) -> None:
 def test_missing_authentication_is_reported(clean_environment: None) -> None:
     with pytest.raises(MissingCredentialsError):
         SshCredentials(ssh_user="admin").validated()
+
+
+def test_an_empty_value_in_the_env_file_counts_as_unset(
+    tmp_path: Path, clean_environment: None
+) -> None:
+    env_file = tmp_path / "rsc.env"
+    env_file.write_text("RSC_SSH_USER=admin\nRSC_SUDO_PASSWORD=\n", encoding="utf-8")
+
+    assert SshCredentials.load(env_file).sudo_password is None
