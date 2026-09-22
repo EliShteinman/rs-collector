@@ -1,8 +1,14 @@
+import os
 from pathlib import Path
 
 from rs_collector.analysis.prompt import AnalysisOptionsPrompt
 from rs_collector.analysis.repository import AnalysisRepository
 from rs_collector.analysis.runner import RedisScopeRunner
+from rs_collector.background.cron_entries import CronEntries
+from rs_collector.background.crontab import CrontabClient, CrontabInstaller, SystemCrontab
+from rs_collector.background.launcher import ServerLauncher
+from rs_collector.background.pid_file import PidFile
+from rs_collector.background.program import Program, RscProgram
 from rs_collector.collection.collector import SupportPackageCollector
 from rs_collector.concurrency.lock import CollectionLockFactory
 from rs_collector.console.choice import ChoicePrompt
@@ -77,6 +83,27 @@ class Container:
             self.analyses(),
             RetentionPolicy(max_age_days=self._settings.retention.max_age_days),
         )
+
+    def server_launcher(self) -> ServerLauncher:
+        background = self._settings.background
+        return ServerLauncher(
+            self.program(),
+            PidFile(self._settings.storage.locks_dir / background.pid_file_name),
+            self.log_dir / background.console_log_name,
+            background,
+        )
+
+    def crontab(self) -> CrontabInstaller:
+        return CrontabInstaller(self.crontab_client(), self._settings.background.crontab_marker)
+
+    def cron_entries(self) -> CronEntries:
+        return CronEntries(self.program(), self._settings.background, os.environ, Path.cwd())
+
+    def program(self) -> Program:
+        return RscProgram()
+
+    def crontab_client(self) -> CrontabClient:
+        return SystemCrontab()
 
     def display_server(self) -> DisplayServer:
         return DisplayServer(self._settings.serve, self._settings.storage, self._paths.serve_file)

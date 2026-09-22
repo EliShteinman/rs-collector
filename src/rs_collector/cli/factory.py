@@ -2,6 +2,7 @@ from argparse import Namespace
 from typing import Protocol
 
 from rs_collector.cli.commands.analyze import AnalyzeCommand
+from rs_collector.cli.commands.background import StartCommand, StopCommand
 from rs_collector.cli.commands.cleanup import CleanupCommand
 from rs_collector.cli.commands.collect import CollectCommand
 from rs_collector.cli.commands.listing import ListCommand
@@ -25,6 +26,8 @@ class CommandFactory:
             "unpin": self._unpin,
             "cleanup": self._cleanup,
             "serve": self._serve,
+            "start": self._start,
+            "stop": self._stop,
         }
 
     def create(self, arguments: Namespace) -> Command:
@@ -50,3 +53,9 @@ class CommandFactory:
 
     def _serve(self, _: Namespace) -> Command:
         return ServeCommand(self._container)
+
+    def _start(self, _: Namespace) -> Command:
+        return StartCommand(self._container)
+
+    def _stop(self, _: Namespace) -> Command:
+        return StopCommand(self._container)

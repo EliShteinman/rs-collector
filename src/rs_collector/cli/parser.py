@@ -19,6 +19,10 @@ class CliParser:
         self._add_pinning(commands)
         self._add_cleanup(commands)
         commands.add_parser("serve", help="Serve the analyses over HTTP")
+        commands.add_parser(
+            "start", help="Run the display server in the background, across logouts and reboots"
+        )
+        commands.add_parser("stop", help="Stop the display server and its automatic start")
         return parser
 
     def _add_collect(self, commands) -> None:

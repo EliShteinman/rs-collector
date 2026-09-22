@@ -1,4 +1,5 @@
 from rs_collector.cli.commands.analyze import AnalyzeCommand
+from rs_collector.cli.commands.background import StartCommand, StopCommand
 from rs_collector.cli.commands.cleanup import CleanupCommand
 from rs_collector.cli.commands.collect import CollectCommand
 from rs_collector.cli.commands.listing import ListCommand
@@ -12,5 +13,7 @@ __all__ = [
     "ListCommand",
     "PinCommand",
     "ServeCommand",
+    "StartCommand",
+    "StopCommand",
     "UnpinCommand",
 ]

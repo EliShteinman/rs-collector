@@ -1,7 +1,11 @@
+import sys
+from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 
 import pytest
+from tests.fakes import FakeCrontab, FakeProgram
 
+from rs_collector.background.pid_file import PidFile
 from rs_collector.cli.app import CliApplication
 from rs_collector.cli.container import Container
 from rs_collector.console.io import ScriptedConsole
@@ -118,3 +122,63 @@ def test_root_is_refused_with_exit_code_one(deployment: ConfigPaths) -> None:
     )
 
     assert application.run(["list"]) == 1
+
+
+class BackgroundContainer(Container):
+    def __init__(self, paths: ConfigPaths, console: ScriptedConsole, crontab: FakeCrontab) -> None:
+        super().__init__(paths=paths, console=console)
+        self._crontab = crontab
+
+    def program(self) -> FakeProgram:
+        return FakeProgram(sys.executable, "-c", "import time; time.sleep(60)")
+
+    def crontab_client(self) -> FakeCrontab:
+        return self._crontab
+
+
+class BackgroundHarness:
+    def __init__(self, paths: ConfigPaths) -> None:
+        self.console = ScriptedConsole([])
+        self.crontab = FakeCrontab()
+        self.container = BackgroundContainer(paths, self.console, self.crontab)
+        self._application = CliApplication(self.console, lambda _: self.container)
+
+    def run(self, *argv: str) -> int:
+        return self._application.run(argv)
+
+
+@pytest.fixture
+def background(deployment: ConfigPaths) -> Iterator[BackgroundHarness]:
+    harness = BackgroundHarness(deployment)
+    yield harness
+    harness.run("stop")
+
+
+def test_start_runs_the_display_server(background: BackgroundHarness) -> None:
+    background.run("start")
+    settings = background.container.settings
+
+    pid_file = PidFile(settings.storage.locks_dir / settings.background.pid_file_name)
+    assert pid_file.running_pid() is not None
+
+
+def test_start_schedules_the_server_after_a_reboot(background: BackgroundHarness) -> None:
+    background.run("start")
+
+    assert background.crontab.content.startswith("@reboot ")
+
+
+def test_stop_removes_the_schedule(background: BackgroundHarness) -> None:
+    background.run("start")
+
+    background.run("stop")
+
+    assert background.crontab.content == ""
+
+
+def test_stop_ends_the_display_server(background: BackgroundHarness) -> None:
+    background.run("start")
+
+    background.run("stop")
+
+    assert "Stopped the display server" in "\n".join(background.console.written)
