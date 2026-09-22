@@ -40,7 +40,6 @@ class CollectionLock:
         fcntl.flock(self._file.fileno(), fcntl.LOCK_UN)
         self._file.close()
         self._file = None
-        self._lock_path.unlink(missing_ok=True)
         self._logger.debug("Released the lock %s", self._lock_path)
 
 

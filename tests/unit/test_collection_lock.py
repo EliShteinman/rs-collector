@@ -1,3 +1,5 @@
+import fcntl
+from contextlib import ExitStack
 from pathlib import Path
 
 import pytest
@@ -50,3 +52,15 @@ def test_the_lock_is_released_after_a_failure(locks: CollectionLockFactory) -> N
 
     with locks.for_cluster("c1.example.com"):
         assert True
+
+
+def test_a_waiting_collection_cannot_slip_past_a_released_lock(
+    locks: CollectionLockFactory, tmp_path: Path
+) -> None:
+    with ExitStack() as stack:
+        with locks.for_cluster("c1.example.com"):
+            waiter = stack.enter_context((tmp_path / "locks" / "c1.example.com.lock").open())
+        fcntl.flock(waiter.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+        with pytest.raises(CollectionAlreadyRunningError), locks.for_cluster("c1.example.com"):
+            pass
