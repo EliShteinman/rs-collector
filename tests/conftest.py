@@ -46,6 +46,7 @@ def settings_document(tmp_path: Path) -> dict[str, object]:
             "command_timeout_seconds": 60,
             "debug_info_timeout_seconds": 1800,
             "auto_accept_host_keys": True,
+            "known_hosts_file_name": "known_hosts",
             "sudo_prompt_wait_seconds": 5,
             "root_prompt_timeout_seconds": 30,
         },

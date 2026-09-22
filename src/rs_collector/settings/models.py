@@ -11,7 +11,10 @@ class RemoteSettings(BaseModel):
     connect_timeout_seconds: int = Field(gt=0)
     command_timeout_seconds: int = Field(gt=0)
     debug_info_timeout_seconds: int = Field(gt=0)
-    auto_accept_host_keys: bool = Field(default=True)
+    auto_accept_host_keys: bool = Field(
+        default=True, description="Remember an unknown host key; a changed key is always refused"
+    )
+    known_hosts_file_name: str = Field(description="Host keys file in the data root")
     sudo_prompt_wait_seconds: int = Field(gt=0)
     root_prompt_timeout_seconds: int = Field(gt=0)
 

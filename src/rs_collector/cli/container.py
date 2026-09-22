@@ -117,7 +117,13 @@ class Container:
     def collect_workflow(self, connection_string: str | None = None) -> CollectWorkflow:
         return CollectWorkflow(
             self._cluster_selector(connection_string),
-            ClusterConnector(ParamikoHostConnector(self._credentials, self._settings.remote)),
+            ClusterConnector(
+                ParamikoHostConnector(
+                    self._credentials,
+                    self._settings.remote,
+                    self._settings.storage.data_root / self._settings.remote.known_hosts_file_name,
+                )
+            ),
             SupportPackageCollector(self.packages(), self._settings.remote),
             CollectionLockFactory(self._settings.storage.locks_dir),
             self._settings.remote,

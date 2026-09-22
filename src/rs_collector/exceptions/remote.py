@@ -39,3 +39,7 @@ class TransferIntegrityError(FileTransferError):
 
 class RootSessionClosedError(RemoteError):
     pass
+
+
+class HostKeyMismatchError(RemoteError):
+    pass
