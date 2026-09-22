@@ -1,3 +1,4 @@
+import shlex
 from pathlib import Path
 
 from rs_collector.collection.models import RemotePackage
@@ -34,7 +35,8 @@ class RemoteFileTransfer:
 
     def _make_readable(self, package: RemotePackage) -> None:
         self._shell.run_checked(
-            _READABLE_TEMPLATE.format(path=package.path), self._settings.command_timeout_seconds
+            _READABLE_TEMPLATE.format(path=shlex.quote(package.path)),
+            self._settings.command_timeout_seconds,
         )
 
     def _verify(self, package: RemotePackage, destination: Path) -> None:

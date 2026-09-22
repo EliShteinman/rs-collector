@@ -1,3 +1,5 @@
+import shlex
+
 from rs_collector.collection.models import RemotePackage
 from rs_collector.collection.output_parser import DebugInfoOutputParser
 from rs_collector.exceptions.remote import RemoteCommandError
@@ -33,12 +35,13 @@ class DebugInfoCommand:
 
     def _command(self) -> str:
         return _DEBUG_INFO_TEMPLATE.format(
-            rladmin=self._settings.rladmin_path, directory=self._settings.remote_tmp_dir
+            rladmin=shlex.quote(self._settings.rladmin_path),
+            directory=shlex.quote(self._settings.remote_tmp_dir),
         )
 
     def _size_of(self, path: str) -> int:
         result = self._shell.run_checked(
-            _SIZE_TEMPLATE.format(path=path), self._settings.command_timeout_seconds
+            _SIZE_TEMPLATE.format(path=shlex.quote(path)), self._settings.command_timeout_seconds
         )
         size = result.first_line()
         if not size.isdigit():
@@ -47,6 +50,6 @@ class DebugInfoCommand:
 
     def _digest_of(self, path: str) -> str:
         result = self._shell.run_checked(
-            _DIGEST_TEMPLATE.format(path=path), self._settings.command_timeout_seconds
+            _DIGEST_TEMPLATE.format(path=shlex.quote(path)), self._settings.command_timeout_seconds
         )
         return result.first_line().split()[0]

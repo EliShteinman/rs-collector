@@ -1,3 +1,5 @@
+import shlex
+
 from rs_collector.collection.models import RemotePackage
 from rs_collector.exceptions.remote import RemoteCommandError, RemoteCommandTimeoutError
 from rs_collector.logging_setup.configurator import LoggerFactory
@@ -17,7 +19,7 @@ class RemoteCleanup:
         self._logger.debug("Removing %s from the cluster", package.path)
         try:
             self._shell.run_checked(
-                _REMOVE_TEMPLATE.format(path=package.path),
+                _REMOVE_TEMPLATE.format(path=shlex.quote(package.path)),
                 self._settings.command_timeout_seconds,
             )
         except (RemoteCommandError, RemoteCommandTimeoutError) as error:

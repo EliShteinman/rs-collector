@@ -30,8 +30,6 @@ class FakeShellChannel:
 
 
 class ScriptedShellChannel:
-    """Answers each sent line with the matching canned reply."""
-
     def __init__(self, replies: dict[str, str], default_reply: str = "") -> None:
         self._replies = replies
         self._default_reply = default_reply
