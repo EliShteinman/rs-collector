@@ -73,6 +73,7 @@ markers = [
     "e2e: full workflow tests",
 ]
 addopts = "--strict-markers"
+filterwarnings = ["ignore:subprocess [0-9]+ is still running:ResourceWarning"]
 
 [tool.coverage.run]
 source = ["rs_collector"]
