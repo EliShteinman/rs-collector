@@ -2,7 +2,7 @@ from rs_collector.exceptions.analysis import (
     AnalysisError,
     AnalysisFailedError,
     AnalysisTimeoutError,
-    AnalyzerNotFoundError,
+    AnalyzerStartError,
 )
 from rs_collector.exceptions.background import (
     BackgroundError,
@@ -24,6 +24,11 @@ from rs_collector.exceptions.configuration import (
     MissingSettingError,
 )
 from rs_collector.exceptions.privileges import PrivilegeError, RunningAsRootError
+from rs_collector.exceptions.processes import (
+    ProcessError,
+    ProcessStartError,
+    ProcessTimeoutError,
+)
 from rs_collector.exceptions.remote import (
     ClusterUnreachableError,
     DebugInfoOutputError,
@@ -56,7 +61,7 @@ __all__ = [
     "AnalysisFailedError",
     "AnalysisNotFoundError",
     "AnalysisTimeoutError",
-    "AnalyzerNotFoundError",
+    "AnalyzerStartError",
     "ArtifactNotFoundError",
     "BackgroundError",
     "ClusterNotFoundError",
@@ -78,6 +83,9 @@ __all__ = [
     "MissingSettingError",
     "PackageNotFoundError",
     "PrivilegeError",
+    "ProcessError",
+    "ProcessStartError",
+    "ProcessTimeoutError",
     "RemoteCommandError",
     "RemoteCommandTimeoutError",
     "RemoteError",

@@ -5,7 +5,7 @@ class AnalysisError(RsCollectorError):
     pass
 
 
-class AnalyzerNotFoundError(AnalysisError):
+class AnalyzerStartError(AnalysisError):
     pass
 
 

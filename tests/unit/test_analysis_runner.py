@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from pathlib import Path
 
 import pytest
 from tests.fakes import FakeProcessRunner
@@ -7,9 +8,13 @@ from rs_collector.analysis.models import AnalysisStatus
 from rs_collector.analysis.options import AnalysisDepth, AnalysisOptions
 from rs_collector.analysis.repository import AnalysisRepository
 from rs_collector.analysis.runner import RedisScopeRunner
-from rs_collector.exceptions.analysis import AnalysisFailedError, AnalyzerNotFoundError
+from rs_collector.exceptions.analysis import (
+    AnalysisFailedError,
+    AnalysisTimeoutError,
+    AnalyzerStartError,
+)
+from rs_collector.exceptions.processes import ProcessStartError, ProcessTimeoutError
 from rs_collector.packages.models import PackageMetadata, StoredPackage
-from rs_collector.processes.runner import ProcessTimeout
 from rs_collector.settings.models import AppSettings
 
 pytestmark = pytest.mark.unit
@@ -128,19 +133,21 @@ def test_a_failing_analyzer_leaves_a_failed_status(
 def test_a_timed_out_analyzer_leaves_a_timed_out_status(
     app_settings: AppSettings, package: StoredPackage
 ) -> None:
-    runner = _runner(app_settings, FakeProcessRunner(error=ProcessTimeout("too slow")))
+    runner = _runner(app_settings, FakeProcessRunner(error=ProcessTimeoutError("too slow")))
     repository = AnalysisRepository(app_settings.storage)
 
-    with pytest.raises(AnalysisFailedError):
+    with pytest.raises(AnalysisTimeoutError):
         runner.analyze(package, AnalysisOptions())
 
     assert repository.list()[0].metadata.status is AnalysisStatus.TIMED_OUT
 
 
-def test_a_missing_analyzer_is_reported(app_settings: AppSettings, package: StoredPackage) -> None:
-    runner = _runner(app_settings, FakeProcessRunner(error=FileNotFoundError("no binary")))
+def test_an_analyzer_that_cannot_start_is_reported(
+    app_settings: AppSettings, package: StoredPackage
+) -> None:
+    runner = _runner(app_settings, FakeProcessRunner(error=ProcessStartError("permission denied")))
 
-    with pytest.raises(AnalyzerNotFoundError):
+    with pytest.raises(AnalyzerStartError):
         runner.analyze(package, AnalysisOptions())
 
 
@@ -153,3 +160,18 @@ def test_a_repeated_analysis_gets_its_own_directory(
     second = runner.analyze(package, AnalysisOptions())
 
     assert second.name == f"{first.name}__2"
+
+
+def test_a_real_unexecutable_analyzer_is_reported_as_a_start_failure(
+    tmp_path: Path, app_settings: AppSettings, package: StoredPackage
+) -> None:
+    analyzer = tmp_path / "redisscope"
+    analyzer.write_text("#!/bin/sh\n", encoding="utf-8")
+    analyzer.chmod(0o644)
+    settings = app_settings.analysis.model_copy(update={"redisscope_binary": analyzer})
+    runner = RedisScopeRunner(
+        AnalysisRepository(app_settings.storage), settings, app_settings.storage
+    )
+
+    with pytest.raises(AnalyzerStartError, match="Permission denied"):
+        runner.analyze(package, AnalysisOptions())

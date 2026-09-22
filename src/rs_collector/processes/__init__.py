@@ -1,3 +1,3 @@
-from rs_collector.processes.runner import ProcessRunner, ProcessTimeout, SubprocessRunner
+from rs_collector.processes.runner import ProcessRunner, SubprocessRunner
 
-__all__ = ["ProcessRunner", "ProcessTimeout", "SubprocessRunner"]
+__all__ = ["ProcessRunner", "SubprocessRunner"]

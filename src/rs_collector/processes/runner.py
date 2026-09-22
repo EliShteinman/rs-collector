@@ -3,6 +3,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Protocol
 
+from rs_collector.exceptions.processes import ProcessStartError, ProcessTimeoutError
 from rs_collector.logging_setup.configurator import LoggerFactory
 
 _ENCODING = "utf-8"
@@ -12,10 +13,6 @@ class ProcessRunner(Protocol):
     def run(
         self, command: Sequence[str], cwd: Path, log_path: Path, timeout_seconds: int
     ) -> int: ...
-
-
-class ProcessTimeout(Exception):
-    pass
 
 
 class SubprocessRunner:
@@ -35,9 +32,9 @@ class SubprocessRunner:
                     check=False,
                 )
             except subprocess.TimeoutExpired as error:
-                raise ProcessTimeout(
+                raise ProcessTimeoutError(
                     f"{command[0]} did not finish within {timeout_seconds} seconds"
                 ) from error
             except OSError as error:
-                raise FileNotFoundError(f"{command[0]} cannot be executed: {error}") from error
+                raise ProcessStartError(f"{command[0]} cannot be executed: {error}") from error
         return completed.returncode

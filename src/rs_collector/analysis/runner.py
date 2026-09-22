@@ -5,10 +5,15 @@ from rs_collector.analysis.models import AnalysisMetadata, AnalysisStatus, Store
 from rs_collector.analysis.namer import AnalysisNamer
 from rs_collector.analysis.options import AnalysisOptions
 from rs_collector.analysis.repository import AnalysisRepository
-from rs_collector.exceptions.analysis import AnalysisFailedError, AnalyzerNotFoundError
+from rs_collector.exceptions.analysis import (
+    AnalysisFailedError,
+    AnalysisTimeoutError,
+    AnalyzerStartError,
+)
+from rs_collector.exceptions.processes import ProcessStartError, ProcessTimeoutError
 from rs_collector.logging_setup.configurator import LoggerFactory
 from rs_collector.packages.models import StoredPackage
-from rs_collector.processes.runner import ProcessRunner, ProcessTimeout, SubprocessRunner
+from rs_collector.processes.runner import ProcessRunner, SubprocessRunner
 from rs_collector.settings.models import AnalysisSettings, StorageSettings
 
 _SUCCESS_STATUS = 0
@@ -35,12 +40,14 @@ class RedisScopeRunner:
         started = self._start(package, options)
         try:
             exit_status = self._execute(started)
-        except ProcessTimeout as error:
+        except ProcessTimeoutError as error:
             self._finish(started, AnalysisStatus.TIMED_OUT, None)
-            raise AnalysisFailedError(str(error)) from error
-        except FileNotFoundError as error:
+            self._logger.error("RedisScope timed out: %s", error)
+            raise AnalysisTimeoutError(str(error)) from error
+        except ProcessStartError as error:
             self._finish(started, AnalysisStatus.FAILED, None)
-            raise AnalyzerNotFoundError(str(error)) from error
+            self._logger.error("RedisScope could not start: %s", error)
+            raise AnalyzerStartError(str(error)) from error
         return self._conclude(started, exit_status)
 
     def _start(self, package: StoredPackage, options: AnalysisOptions) -> StoredAnalysis:
