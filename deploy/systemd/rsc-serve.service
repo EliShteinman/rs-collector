@@ -14,8 +14,6 @@ RestartSec=5
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=full
-ProtectHome=true
-ReadWritePaths=/data/redisscope
 
 [Install]
 WantedBy=multi-user.target

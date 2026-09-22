@@ -33,7 +33,6 @@ What the installer does:
 | `/usr/local/bin/rsc` | symbolic link to it |
 | `/etc/rsc/config/` | `settings.yml`, `clusters.yml`, `logging.yml`, `copyparty.conf` |
 | `/etc/rsc/rsc.env` | SSH and sudo secrets, mode 0640, owned by `root:rsc` |
-| `/data/redisscope/` | `packages/`, `analyses/`, `locks/`, `logs/` |
 | `/etc/systemd/system/` | `rsc-serve.service`, `rsc-cleanup.service`, `rsc-cleanup.timer` |
 | `/etc/profile.d/rsc.sh` | exports `RSC_CONFIG_DIR` for interactive use |
 
@@ -45,16 +44,20 @@ An existing configuration file is never overwritten: the new one is written next
 `/etc/rsc/rsc.env`:
 
 ```
+RSC_DATA_ROOT=/mnt/storage/rsc
 RSC_SSH_USER=svc_redis
 RSC_SSH_KEY_PATH=/etc/rsc/id_ed25519
 RSC_SSH_PASSWORD=
 RSC_SUDO_PASSWORD=
 ```
 
+`RSC_DATA_ROOT` is the directory all output goes to. rsc creates `packages/`, `analyses/`,
+`locks/` and `logs/` under it.
+
 Set `RSC_SUDO_PASSWORD` only when `sudo su -` asks for a password on the cluster nodes.
 
 `/etc/rsc/config/settings.yml` holds `analysis.redisscope_binary` — the path of the installed
-RedisScope executable — and `storage.data_root`.
+RedisScope executable.
 
 `/etc/rsc/config/clusters.yml` holds the clusters:
 
@@ -67,9 +70,10 @@ environments:
         - node2.cluster1.example.com
 ```
 
-## 5. Check
+## 5. Start and check
 
 ```bash
+sudo systemctl start rsc-serve.service
 rsc list
 systemctl status rsc-serve.service
 systemctl list-timers rsc-cleanup.timer

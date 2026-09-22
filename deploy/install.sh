@@ -8,7 +8,6 @@ INSTALL_ROOT="/opt/rsc"
 BINARY_PATH="${INSTALL_ROOT}/bin/rsc"
 CONFIG_DIR="/etc/rsc/config"
 ENV_FILE="/etc/rsc/rsc.env"
-DATA_ROOT="/data/redisscope"
 SYSTEMD_DIR="/etc/systemd/system"
 RELEASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
@@ -46,18 +45,12 @@ install_configuration() {
     chmod 0640 "${ENV_FILE}"
 }
 
-create_data_directories() {
-    install -d -m 0755 -o "${SERVICE_USER}" -g "${SERVICE_USER}" \
-        "${DATA_ROOT}" "${DATA_ROOT}/packages" "${DATA_ROOT}/analyses" \
-        "${DATA_ROOT}/locks" "${DATA_ROOT}/logs"
-}
-
 install_units() {
     install -m 0644 "${RELEASE_DIR}"/deploy/systemd/*.service "${SYSTEMD_DIR}/"
     install -m 0644 "${RELEASE_DIR}"/deploy/systemd/*.timer "${SYSTEMD_DIR}/"
     systemctl daemon-reload
     systemctl enable --now rsc-cleanup.timer
-    systemctl enable --now rsc-serve.service
+    systemctl enable rsc-serve.service
 }
 
 link_command() {
@@ -72,9 +65,9 @@ require_root
 create_service_user
 install_binary
 install_configuration
-create_data_directories
 install_units
 link_command
 
 echo "rsc is installed."
-echo "Edit ${CONFIG_DIR}/clusters.yml and ${ENV_FILE}, then run: rsc collect"
+echo "Set RSC_DATA_ROOT and the SSH settings in ${ENV_FILE}, edit ${CONFIG_DIR}/clusters.yml,"
+echo "then run: systemctl start rsc-serve.service, and rsc collect"
