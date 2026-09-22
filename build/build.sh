@@ -20,6 +20,6 @@ cp "${OUTPUT_DIR}/rsc" "${RELEASE_DIR}/rsc"
 cp -R config "${RELEASE_DIR}/config"
 cp rsc.env.example "${RELEASE_DIR}/rsc.env"
 chmod 0600 "${RELEASE_DIR}/rsc.env"
-tar czf "${OUTPUT_DIR}/${RELEASE_NAME}.tar.gz" -C "${OUTPUT_DIR}" "${RELEASE_NAME}"
+COPYFILE_DISABLE=1 tar --no-xattrs -czf "${OUTPUT_DIR}/${RELEASE_NAME}.tar.gz" -C "${OUTPUT_DIR}" "${RELEASE_NAME}"
 
 echo "Built ${OUTPUT_DIR}/${RELEASE_NAME}.tar.gz"
