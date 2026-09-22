@@ -19,7 +19,7 @@ remote:
   root_prompt_timeout_seconds: 30
 
 analysis:
-  redisscope_binary: /opt/redisscope/redisscope
+  redisscope_binary: redisscope
   timeout_seconds: 7200
   console_log_name: analysis_console.log
 

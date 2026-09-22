@@ -34,7 +34,7 @@ Fill in:
 - `rsc.env` — `RSC_DATA_ROOT` (the directory all output goes to), the SSH user, key or
   password, and `RSC_SUDO_PASSWORD` only if `sudo su -` asks for one on the cluster nodes
 - `config/clusters.yml` — the environments and their clusters
-- `config/settings.yml` — `analysis.redisscope_binary`, the path of RedisScope
+- `config/settings.yml` — `analysis.redisscope_binary`, only if `redisscope` is not on the `PATH`
 
 Then:
 

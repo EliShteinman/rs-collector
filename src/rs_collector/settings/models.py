@@ -22,7 +22,7 @@ class RemoteSettings(BaseModel):
 class AnalysisSettings(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
-    redisscope_binary: Path = Field(description="Absolute path of the RedisScope executable")
+    redisscope_binary: Path = Field(description="RedisScope command name or path")
     timeout_seconds: int = Field(gt=0)
     console_log_name: str = Field(description="File the analyzer output is written to")
 
