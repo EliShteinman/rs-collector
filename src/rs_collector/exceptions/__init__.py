@@ -16,6 +16,7 @@ from rs_collector.exceptions.configuration import (
     ConfigValidationError,
     MissingCredentialsError,
 )
+from rs_collector.exceptions.privileges import PrivilegeError, RunningAsRootError
 from rs_collector.exceptions.remote import (
     ClusterUnreachableError,
     DebugInfoOutputError,
@@ -66,11 +67,13 @@ __all__ = [
     "MetadataError",
     "MissingCredentialsError",
     "PackageNotFoundError",
+    "PrivilegeError",
     "RemoteCommandError",
     "RemoteCommandTimeoutError",
     "RemoteError",
     "RootEscalationError",
     "RsCollectorError",
+    "RunningAsRootError",
     "SelectionAbortedError",
     "SelectionError",
     "ServeError",

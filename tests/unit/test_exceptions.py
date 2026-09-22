@@ -8,6 +8,7 @@ from rs_collector.exceptions import (
     ConnectionStringError,
     PackageNotFoundError,
     RsCollectorError,
+    RunningAsRootError,
 )
 
 pytestmark = pytest.mark.unit
@@ -22,6 +23,7 @@ pytestmark = pytest.mark.unit
         ConfigFileNotFoundError,
         ConnectionStringError,
         PackageNotFoundError,
+        RunningAsRootError,
     ],
 )
 def test_every_error_derives_from_the_application_base(error_type: type[Exception]) -> None:

@@ -7,6 +7,7 @@ from rs_collector.cli.parser import CliParser
 from rs_collector.console.io import ConsoleIo, StandardConsole
 from rs_collector.exceptions.base import RsCollectorError
 from rs_collector.logging_setup.configurator import LoggerFactory
+from rs_collector.runtime.privileges import PrivilegeGuard
 
 _EXIT_FAILURE = 1
 _EXIT_INTERRUPTED = 130
@@ -17,13 +18,16 @@ class CliApplication:
         self,
         console: ConsoleIo | None = None,
         container_factory: Callable[[ConsoleIo], Container] | None = None,
+        guard: PrivilegeGuard | None = None,
     ) -> None:
         self._console = console or StandardConsole()
         self._container_factory = container_factory or self._default_container
+        self._guard = guard or PrivilegeGuard()
 
     def run(self, argv: Sequence[str] | None = None) -> int:
         arguments = CliParser().parse(argv)
         try:
+            self._guard.refuse_root()
             container = self._prepared_container()
             return CommandFactory(container).create(arguments).execute()
         except RsCollectorError as error:

@@ -6,6 +6,7 @@ from rs_collector.cli.app import CliApplication
 from rs_collector.cli.container import Container
 from rs_collector.console.io import ScriptedConsole
 from rs_collector.packages.models import PackageMetadata
+from rs_collector.runtime.privileges import PrivilegeGuard
 from rs_collector.settings.paths import ConfigPaths
 
 pytestmark = pytest.mark.e2e
@@ -106,3 +107,14 @@ def test_the_log_file_is_written_next_to_the_data(cli: CliHarness) -> None:
     cli.run("list")
 
     assert (cli.container.log_dir / "rsc.log").is_file()
+
+
+def test_root_is_refused_with_exit_code_one(deployment: ConfigPaths) -> None:
+    console = ScriptedConsole([])
+    application = CliApplication(
+        console,
+        lambda _: Container(paths=deployment, console=console),
+        PrivilegeGuard(effective_user_id=lambda: 0),
+    )
+
+    assert application.run(["list"]) == 1
