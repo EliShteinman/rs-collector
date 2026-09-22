@@ -44,6 +44,18 @@ The display server now runs in the background. It keeps running after you close 
 terminal, starts again after the server reboots, and old packages and analyses are removed
 daily. `./rsc stop` turns all of that off.
 
+## Upgrade
+
+Unpack the new release somewhere else. Do not unpack it over the old folder, because that
+would replace your `rsc.env`. Then:
+
+```bash
+./rsc stop
+cp <new>/rsc ./rsc
+diff <new>/config/settings.yml config/settings.yml    # copy over any new settings
+./rsc start
+```
+
 ## Use
 
 ```bash
