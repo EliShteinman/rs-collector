@@ -3,8 +3,6 @@ _CARRIAGE_RETURN = "\r"
 
 
 class CommandOutputCleaner:
-    """Keeps only what the command itself printed between its echo and its marker."""
-
     def clean(self, raw_output: str, command: str, marker: str) -> str:
         lines = [line.rstrip(_CARRIAGE_RETURN) for line in raw_output.splitlines()]
         body = lines[self._start_of_body(lines, command, marker) :]
