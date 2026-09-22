@@ -32,6 +32,16 @@ class PackageRepository:
             archive_path=directory / self._settings.package_archive_name,
         )
 
+    def discard_slot(self, slot: PackageSlot) -> None:
+        try:
+            shutil.rmtree(slot.directory)
+        except OSError as error:
+            self._logger.error(
+                "The unfinished package %s could not be removed: %s", slot.name, error
+            )
+            return
+        self._logger.warning("Removed the unfinished package %s", slot.name)
+
     def save(self, metadata: PackageMetadata) -> StoredPackage:
         directory = self._settings.packages_dir / metadata.name
         directory.mkdir(parents=True, exist_ok=True)

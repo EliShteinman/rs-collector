@@ -4,6 +4,7 @@ from rs_collector.collection.cleanup import RemoteCleanup
 from rs_collector.collection.debug_info import DebugInfoCommand
 from rs_collector.collection.models import RemotePackage
 from rs_collector.collection.transfer import RemoteFileTransfer
+from rs_collector.exceptions.base import RsCollectorError
 from rs_collector.files.digest import FileDigest
 from rs_collector.logging_setup.configurator import LoggerFactory
 from rs_collector.packages.models import PackageMetadata, PackageSlot, StoredPackage
@@ -37,6 +38,9 @@ class SupportPackageCollector:
         slot = self._repository.create_slot(connection.cluster.name, collected_at)
         try:
             self._fetch(session, package, slot)
+        except RsCollectorError, OSError, KeyboardInterrupt:
+            self._repository.discard_slot(slot)
+            raise
         finally:
             RemoteCleanup(session.shell, self._settings).remove(package)
         return self._repository.save(self._metadata(connection, package, slot, collected_at))

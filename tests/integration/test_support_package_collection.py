@@ -157,3 +157,12 @@ def test_collect_reports_a_failing_debug_info(
 
     with pytest.raises(RemoteCommandError):
         _collect(cluster_connection, app_settings, replies)
+
+
+def test_a_failed_transfer_leaves_no_package_directory(
+    cluster_connection: ClusterConnection, app_settings: AppSettings
+) -> None:
+    with pytest.raises(TransferIntegrityError):
+        _collect(cluster_connection, app_settings, _replies(size=999))
+
+    assert list(app_settings.storage.packages_dir.iterdir()) == []
