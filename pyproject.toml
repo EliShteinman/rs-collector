@@ -65,6 +65,7 @@ ban-relative-imports = "all"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
 markers = [
     "unit: isolated component tests",
     "integration: tests across several components",
