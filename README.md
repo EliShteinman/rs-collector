@@ -66,4 +66,5 @@ python3.14 -m venv .venv
 .venv/bin/pre-commit install
 .venv/bin/pytest
 .venv/bin/ruff check .
+.venv/bin/pip-audit -r vendor/requirements.txt --no-deps --disable-pip
 ```
