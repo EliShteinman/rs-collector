@@ -38,6 +38,17 @@ class ServeSettings(BaseModel):
     share_name: str
 
 
+class BackgroundSettings(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    pid_file_name: str = Field(description="File in the locks directory holding the server PID")
+    console_log_name: str = Field(description="File in the logs directory for the server output")
+    startup_check_seconds: float = Field(gt=0)
+    stop_timeout_seconds: float = Field(gt=0)
+    cleanup_schedule: str = Field(description="Cron schedule of the daily cleanup")
+    crontab_marker: str = Field(description="Comment marking the crontab lines rsc owns")
+
+
 class StorageSettings(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -70,3 +81,4 @@ class AppSettings(BaseModel):
     analysis: AnalysisSettings
     retention: RetentionSettings
     serve: ServeSettings
+    background: BackgroundSettings

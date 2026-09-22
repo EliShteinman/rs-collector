@@ -4,6 +4,12 @@ from rs_collector.exceptions.analysis import (
     AnalysisTimeoutError,
     AnalyzerNotFoundError,
 )
+from rs_collector.exceptions.background import (
+    BackgroundError,
+    CrontabError,
+    ServerStartError,
+    ServerStopError,
+)
 from rs_collector.exceptions.base import RsCollectorError
 from rs_collector.exceptions.concurrency import (
     CollectionAlreadyRunningError,
@@ -52,6 +58,7 @@ __all__ = [
     "AnalysisTimeoutError",
     "AnalyzerNotFoundError",
     "ArtifactNotFoundError",
+    "BackgroundError",
     "ClusterNotFoundError",
     "ClusterUnreachableError",
     "CollectionAlreadyRunningError",
@@ -61,6 +68,7 @@ __all__ = [
     "ConfigValidationError",
     "ConfigurationError",
     "ConnectionStringError",
+    "CrontabError",
     "DebugInfoOutputError",
     "DisplayServerStartError",
     "EmptyInventoryError",
@@ -79,6 +87,8 @@ __all__ = [
     "SelectionAbortedError",
     "SelectionError",
     "ServeError",
+    "ServerStartError",
+    "ServerStopError",
     "SshConnectionError",
     "StorageError",
     "TransferIntegrityError",

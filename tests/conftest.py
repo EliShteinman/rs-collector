@@ -55,6 +55,14 @@ def settings_document(tmp_path: Path) -> dict[str, object]:
         },
         "retention": {"max_age_days": 7},
         "serve": {"host": "0.0.0.0", "port": 3923, "share_name": "analyses"},
+        "background": {
+            "pid_file_name": "serve.pid",
+            "console_log_name": "serve_console.log",
+            "startup_check_seconds": 0.5,
+            "stop_timeout_seconds": 5,
+            "cleanup_schedule": "30 3 * * *",
+            "crontab_marker": "# rsc",
+        },
     }
 
 

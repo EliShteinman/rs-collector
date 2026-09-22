@@ -1,4 +1,4 @@
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from pathlib import Path
 
 from rs_collector.exceptions.remote import SshConnectionError
@@ -121,3 +121,47 @@ class FakeProcessRunner:
             raise self.error
         log_path.write_text("analyzer output\n", encoding="utf-8")
         return self.exit_status
+
+
+class FakeCrontab:
+    def __init__(self, content: str = "") -> None:
+        self.content = content
+
+    def read(self) -> str:
+        return self.content
+
+    def write(self, content: str) -> None:
+        self.content = content
+
+
+class FakeProgram:
+    def __init__(self, *prefix: str) -> None:
+        self._prefix = prefix or ("/usr/local/bin/rsc",)
+
+    def argv(self, *arguments: str) -> tuple[str, ...]:
+        return (*self._prefix, *arguments)
+
+
+class FakeSpawner:
+    def __init__(self, pid: int = 4242) -> None:
+        self._pid = pid
+        self.spawned: list[tuple[str, ...]] = []
+
+    def spawn(self, argv: Sequence[str], log_path: Path) -> int:
+        self.spawned.append(tuple(argv))
+        return self._pid
+
+
+class FakeProcessSignals:
+    def __init__(self, alive: set[int] | None = None, dies_on_terminate: bool = True) -> None:
+        self.alive = set() if alive is None else alive
+        self._dies_on_terminate = dies_on_terminate
+        self.terminated: list[int] = []
+
+    def is_alive(self, pid: int) -> bool:
+        return pid in self.alive
+
+    def terminate(self, pid: int) -> None:
+        self.terminated.append(pid)
+        if self._dies_on_terminate:
+            self.alive.discard(pid)

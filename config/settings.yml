@@ -28,3 +28,11 @@ serve:
   host: 0.0.0.0
   port: 3923
   share_name: analyses
+
+background:
+  pid_file_name: serve.pid
+  console_log_name: serve_console.log
+  startup_check_seconds: 2
+  stop_timeout_seconds: 10
+  cleanup_schedule: "30 3 * * *"
+  crontab_marker: "# rsc"
