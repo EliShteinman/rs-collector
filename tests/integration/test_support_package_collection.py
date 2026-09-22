@@ -5,6 +5,7 @@ from tests.fakes import FakeSshSession, ScriptedShellChannel
 
 from rs_collector.collection.collector import SupportPackageCollector
 from rs_collector.exceptions.remote import RemoteCommandError, TransferIntegrityError
+from rs_collector.packages.models import StoredPackage
 from rs_collector.packages.repository import PackageRepository
 from rs_collector.remote.channel_reader import ChannelReader
 from rs_collector.remote.cluster_connector import ClusterConnection
@@ -71,7 +72,7 @@ def _session(
 
 def _collect(
     connection: ClusterConnection, app_settings: AppSettings, replies: dict[str, str] | None = None
-):
+) -> tuple[StoredPackage, StubRootSession]:
     session = _session(connection, app_settings, replies or _replies())
     connection.session.download_payload = _PAYLOAD
     collector = SupportPackageCollector(

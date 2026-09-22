@@ -1,9 +1,11 @@
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser, Namespace, _SubParsersAction
 from collections.abc import Sequence
 
 _PROGRAM = "rsc"
 _DESCRIPTION = "Collect Redis Enterprise support packages and analyze them with RedisScope"
 _COMMAND_DESTINATION = "command"
+
+type Subcommands = _SubParsersAction[ArgumentParser]
 
 
 class CliParser:
@@ -25,7 +27,7 @@ class CliParser:
         commands.add_parser("stop", help="Stop the display server and its automatic start")
         return parser
 
-    def _add_collect(self, commands) -> None:
+    def _add_collect(self, commands: Subcommands) -> None:
         collect = commands.add_parser("collect", help="Collect a support package from a cluster")
         collect.add_argument(
             "--conn-string",
@@ -34,7 +36,7 @@ class CliParser:
             help="Database connection string identifying the cluster",
         )
 
-    def _add_pinning(self, commands) -> None:
+    def _add_pinning(self, commands: Subcommands) -> None:
         for name, help_text in (
             ("pin", "Keep a package or analysis beyond the retention period"),
             ("unpin", "Let a package or analysis expire again"),
@@ -42,7 +44,7 @@ class CliParser:
             command = commands.add_parser(name, help=help_text)
             command.add_argument("name", help="Name of the package or analysis")
 
-    def _add_cleanup(self, commands) -> None:
+    def _add_cleanup(self, commands: Subcommands) -> None:
         cleanup = commands.add_parser("cleanup", help="Remove expired packages and analyses")
         cleanup.add_argument(
             "--dry-run",

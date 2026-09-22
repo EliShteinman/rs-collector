@@ -1,13 +1,13 @@
 import pytest
 
-from rs_collector.analysis.options import AnalysisDepth
+from rs_collector.analysis.options import AnalysisDepth, AnalysisOptions
 from rs_collector.analysis.prompt import AnalysisOptionsPrompt
 from rs_collector.console.io import ScriptedConsole
 
 pytestmark = pytest.mark.unit
 
 
-def _ask(answers: list[str]):
+def _ask(answers: list[str]) -> AnalysisOptions:
     return AnalysisOptionsPrompt(ScriptedConsole(answers)).ask()
 
 

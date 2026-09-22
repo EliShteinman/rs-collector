@@ -16,7 +16,7 @@ class YamlDocumentLoader:
             raise ConfigFileFormatError(f"{path} must contain a mapping at its root")
         return document
 
-    def _read(self, path: Path) -> Any:
+    def _read(self, path: Path) -> object:
         if not path.is_file():
             raise ConfigFileNotFoundError(f"Configuration file not found: {path}")
         try:

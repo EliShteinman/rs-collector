@@ -2,6 +2,7 @@ from rs_collector.collection.collector import SupportPackageCollector
 from rs_collector.concurrency.lock import CollectionLockFactory
 from rs_collector.console.confirm import ConfirmPrompt
 from rs_collector.console.io import ConsoleIo
+from rs_collector.inventory.models import Cluster
 from rs_collector.logging_setup.configurator import LoggerFactory
 from rs_collector.packages.models import StoredPackage
 from rs_collector.remote.cluster_connector import ClusterConnector
@@ -46,7 +47,7 @@ class CollectWorkflow:
         self._offer_analysis(package)
         return package
 
-    def _collect(self, cluster) -> StoredPackage:
+    def _collect(self, cluster: Cluster) -> StoredPackage:
         self._console.write(f"Connecting to {cluster.name} ...")
         connection = self._connector.connect(cluster)
         with RootSession(

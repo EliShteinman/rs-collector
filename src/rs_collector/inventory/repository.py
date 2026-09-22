@@ -51,7 +51,7 @@ class YamlInventoryRepository:
                 f"{self._paths.clusters_file} is invalid: {error}"
             ) from error
 
-    def _environment(self, name: str, clusters: Any) -> Environment:
+    def _environment(self, name: str, clusters: object) -> Environment:
         environment = Environment.model_validate({"name": name, "clusters": clusters})
         return environment.model_copy(
             update={
