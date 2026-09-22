@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
-# Builds dist/rsc-release.tar.gz on a RHEL 9 x86_64 machine, with no Docker and no root.
-# Run build/fetch-python.sh once first, or point PYTHON at another Python 3.14.
+# Builds dist/rsc-release.tar.gz on a RHEL 9 x86_64 machine, with no Docker, no root and no
+# network: Python and every package come from vendor/.
 set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BUILD_DIR="${PROJECT_ROOT}/.build"
-PYTHON="${PYTHON:-${BUILD_DIR}/python/bin/python3}"
+PYTHON_ARCHIVE="${PROJECT_ROOT}/vendor/python/cpython-3.14.7+20260901-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz"
+PYTHON_SHA256="3959f92825141e04adf44982d3a83ee57af0877e893b0796e04c1468749d9b04"
+PYTHON="${BUILD_DIR}/python/bin/python3"
 VENV="${BUILD_DIR}/venv"
 OUTPUT_DIR="${PROJECT_ROOT}/dist"
 RELEASE_NAME="rsc-release"
@@ -18,11 +20,11 @@ require_linux_x86_64() {
     fi
 }
 
-require_python() {
-    if [[ ! -x "${PYTHON}" ]]; then
-        echo "No Python at ${PYTHON}. Run build/fetch-python.sh first." >&2
-        exit 1
-    fi
+unpack_python() {
+    echo "${PYTHON_SHA256}  ${PYTHON_ARCHIVE}" | sha256sum --check --quiet
+    rm -rf "${BUILD_DIR}/python"
+    mkdir -p "${BUILD_DIR}"
+    tar -xzf "${PYTHON_ARCHIVE}" -C "${BUILD_DIR}"
 }
 
 install_packages() {
@@ -51,7 +53,7 @@ assemble_release() {
 }
 
 require_linux_x86_64
-require_python
+unpack_python
 install_packages
 build_executable
 assemble_release
