@@ -182,3 +182,14 @@ def test_stop_ends_the_display_server(background: BackgroundHarness) -> None:
     background.run("stop")
 
     assert "Stopped the display server" in "\n".join(background.console.written)
+
+
+def test_cleanup_still_runs_with_a_broken_analysis(cli: CliHarness) -> None:
+    cli.container.packages().save(_package("old", age_days=9))
+    broken = cli.container.settings.storage.analyses_dir / "broken"
+    broken.mkdir(parents=True)
+    (broken / "analysis.json").write_text("{not json", encoding="utf-8")
+
+    cli.run("cleanup")
+
+    assert cli.container.packages().list() == ()

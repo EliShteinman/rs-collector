@@ -60,13 +60,21 @@ class PackageRepository:
     def list(self) -> tuple[StoredPackage, ...]:
         if not self._settings.packages_dir.is_dir():
             return ()
+        packages = (self._readable(directory) for directory in self._package_directories())
         return tuple(
             sorted(
-                (self._stored(d, self._read_metadata(d)) for d in self._package_directories()),
+                (package for package in packages if package is not None),
                 key=lambda package: package.metadata.collected_at,
                 reverse=True,
             )
         )
+
+    def _readable(self, directory: Path) -> StoredPackage | None:
+        try:
+            return self._stored(directory, self._read_metadata(directory))
+        except MetadataError as error:
+            self._logger.warning("Skipping an unreadable package: %s", error)
+            return None
 
     def delete(self, name: str) -> None:
         stored = self.get(name)

@@ -41,11 +41,21 @@ class AnalysisRepository:
     def list(self) -> tuple[StoredAnalysis, ...]:
         if not self._settings.analyses_dir.is_dir():
             return ()
-        analyses = (
-            StoredAnalysis(metadata=self._read_metadata(directory), directory=directory)
-            for directory in self._analysis_directories()
+        analyses = (self._readable(directory) for directory in self._analysis_directories())
+        return tuple(
+            sorted(
+                (analysis for analysis in analyses if analysis is not None),
+                key=lambda item: item.metadata.analyzed_at,
+                reverse=True,
+            )
         )
-        return tuple(sorted(analyses, key=lambda item: item.metadata.analyzed_at, reverse=True))
+
+    def _readable(self, directory: Path) -> StoredAnalysis | None:
+        try:
+            return StoredAnalysis(metadata=self._read_metadata(directory), directory=directory)
+        except MetadataError as error:
+            self._logger.warning("Skipping an unreadable analysis: %s", error)
+            return None
 
     def names(self) -> tuple[str, ...]:
         if not self._settings.analyses_dir.is_dir():

@@ -95,3 +95,11 @@ def test_delete_removes_the_package_directory(repository: PackageRepository) -> 
     repository.delete(stored.name)
 
     assert not stored.directory.exists()
+
+
+def test_list_skips_a_package_with_broken_metadata(repository: PackageRepository) -> None:
+    repository.save(_metadata("good"))
+    broken = repository.save(_metadata("broken"))
+    (broken.directory / "package.json").write_text("{not json", encoding="utf-8")
+
+    assert [package.name for package in repository.list()] == ["good"]
