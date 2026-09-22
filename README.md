@@ -21,14 +21,17 @@ sudo ./deploy/install.sh
 ```
 
 The installer creates the `rsc` service user, installs the binary in `/opt/rsc/bin/rsc`,
-the configuration in `/etc/rsc/config`, the data directories under `/data/redisscope`, and
-enables `rsc-serve.service` and `rsc-cleanup.timer`.
+the configuration in `/etc/rsc/config`, and enables `rsc-serve.service` and
+`rsc-cleanup.timer`.
 
 Then fill in:
 
 - `/etc/rsc/config/clusters.yml` — the environments and their clusters
-- `/etc/rsc/rsc.env` — SSH user, key or password, and the sudo password if one is needed
-- `/etc/rsc/config/settings.yml` — the path of the RedisScope executable and the data root
+- `/etc/rsc/rsc.env` — `RSC_DATA_ROOT` (the directory all output goes to), SSH user, key or
+  password, and the sudo password if one is needed
+- `/etc/rsc/config/settings.yml` — the path of the RedisScope executable
+
+Then start the display server: `sudo systemctl start rsc-serve.service`.
 
 ## Use
 
