@@ -56,6 +56,7 @@ class StorageSettings(BaseModel):
     packages_dir_name: str
     analyses_dir_name: str
     locks_dir_name: str
+    logs_dir_name: str
     package_archive_name: str
     package_metadata_name: str
     analysis_metadata_name: str
@@ -71,6 +72,10 @@ class StorageSettings(BaseModel):
     @property
     def locks_dir(self) -> Path:
         return self.data_root / self.locks_dir_name
+
+    @property
+    def logs_dir(self) -> Path:
+        return self.data_root / self.logs_dir_name
 
 
 class AppSettings(BaseModel):

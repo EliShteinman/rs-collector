@@ -40,8 +40,6 @@ from rs_collector.settings.paths import ConfigPaths, ConfigPathsResolver
 from rs_collector.workflows.analyze import AnalyzeWorkflow
 from rs_collector.workflows.collect import CollectWorkflow
 
-_LOG_DIR_NAME = "logs"
-
 
 class Container:
     def __init__(self, paths: ConfigPaths | None = None, console: ConsoleIo | None = None) -> None:
@@ -66,7 +64,7 @@ class Container:
 
     @property
     def log_dir(self) -> Path:
-        return self._settings.storage.data_root / _LOG_DIR_NAME
+        return self._settings.storage.logs_dir
 
     def packages(self) -> PackageRepository:
         return PackageRepository(self._settings.storage)

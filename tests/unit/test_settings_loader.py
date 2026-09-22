@@ -109,3 +109,13 @@ def test_a_missing_data_root_is_reported(
 
     with pytest.raises(MissingSettingError):
         SettingsLoader(config_paths).load()
+
+
+def test_the_logs_directory_name_comes_from_the_settings(
+    config_paths: ConfigPaths, settings_document: dict[str, dict[str, object]]
+) -> None:
+    settings_document["storage"]["logs_dir_name"] = "journal"
+    _write_settings(config_paths, settings_document)
+
+    storage = SettingsLoader(config_paths).load().storage
+    assert storage.logs_dir == storage.data_root / "journal"

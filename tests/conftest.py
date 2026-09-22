@@ -34,6 +34,7 @@ def settings_document(tmp_path: Path) -> dict[str, object]:
             "packages_dir_name": "packages",
             "analyses_dir_name": "analyses",
             "locks_dir_name": "locks",
+            "logs_dir_name": "logs",
             "package_archive_name": "support_package.tar.gz",
             "package_metadata_name": "package.json",
             "analysis_metadata_name": "analysis.json",
