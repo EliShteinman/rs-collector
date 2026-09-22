@@ -32,7 +32,6 @@ RUN python3 -m venv /opt/venv \
 
 COPY pyproject.toml /src/pyproject.toml
 COPY src /src/src
-COPY config /src/config
 COPY build /src/build
 
 RUN /opt/venv/bin/pyinstaller --clean --noconfirm \

@@ -12,7 +12,7 @@ analysis = Analysis(
     [str(PROJECT_ROOT / "build" / "entrypoint.py")],
     pathex=[str(PROJECT_ROOT / "src")],
     binaries=copyparty_binaries,
-    datas=[(str(PROJECT_ROOT / "config"), "config"), *copyparty_datas],
+    datas=copyparty_datas,
     hiddenimports=[
         "rs_collector.cli.app",
         "logging.handlers",
