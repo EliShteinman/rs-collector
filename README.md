@@ -5,11 +5,14 @@ It ships as a single executable for RHEL 9 x86_64; the server needs no Python an
 
 ## Build
 
-Requires Docker on the build machine.
+On a RHEL 9 x86_64 machine, as a regular user. It needs no Docker and no root:
 
 ```bash
+./build/fetch-python.sh   # once: downloads Python 3.14 into .build/python
 ./build/build.sh          # produces dist/rsc-release.tar.gz
 ```
+
+The Python packages come from `vendor/`, so the build itself downloads nothing.
 
 ## Install
 
