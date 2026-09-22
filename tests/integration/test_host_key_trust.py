@@ -41,6 +41,7 @@ class LocalSshServer:
         self._socket.listen()
         self.port = self._socket.getsockname()[1]
         self._running = True
+        self._transports: list[paramiko.Transport] = []
         threading.Thread(target=self._serve, daemon=True).start()
 
     def replace_host_key(self) -> None:
@@ -49,6 +50,8 @@ class LocalSshServer:
     def close(self) -> None:
         self._running = False
         self._socket.close()
+        for transport in self._transports:
+            transport.close()
 
     def _serve(self) -> None:
         while self._running:
@@ -58,7 +61,11 @@ class LocalSshServer:
                 return
             transport = paramiko.Transport(connection)
             transport.add_server_key(self.host_key)
-            transport.start_server(server=_PasswordServer())
+            self._transports.append(transport)
+            try:
+                transport.start_server(server=_PasswordServer())
+            except paramiko.SSHException, EOFError, OSError:
+                transport.close()
 
     def _new_key_file(self) -> str:
         self._generation += 1
