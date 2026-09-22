@@ -174,3 +174,6 @@ data/
 
 # Native build workspace
 .build/
+
+# Local working notes
+PLAN.md
