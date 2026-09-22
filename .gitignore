@@ -171,3 +171,6 @@ data/
 # The vendored wheels are part of the release
 !vendor/wheels/
 !vendor/wheels/*.whl
+
+# Native build workspace
+.build/
