@@ -11,6 +11,7 @@ _PORT_FLAG = "-p"
 _VOLUME_FLAG = "-v"
 _READ_ONLY_ACCESS = "r"
 _PROGRAM_NAME = "copyparty"
+_NORMAL_EXIT_CODES = (0, None)
 
 
 class DisplayServerCommandBuilder:
@@ -69,6 +70,9 @@ class DisplayServer:
         try:
             copyparty_main(argv=argv)
         except SystemExit as error:
+            if error.code in _NORMAL_EXIT_CODES:
+                self._logger.info("%s stopped", _PROGRAM_NAME)
+                return
             raise DisplayServerStartError(
                 f"{_PROGRAM_NAME} stopped with status {error.code}"
             ) from error
