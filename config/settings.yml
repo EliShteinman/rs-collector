@@ -1,5 +1,4 @@
 storage:
-  data_root: /data/redisscope
   packages_dir_name: packages
   analyses_dir_name: analyses
   locks_dir_name: locks

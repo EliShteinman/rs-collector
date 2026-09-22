@@ -7,6 +7,7 @@ from rs_collector.exceptions.configuration import (
     ConfigFileFormatError,
     ConfigFileNotFoundError,
     ConfigValidationError,
+    MissingSettingError,
 )
 from rs_collector.settings.loader import SettingsLoader
 from rs_collector.settings.paths import ConfigPaths
@@ -72,4 +73,39 @@ def test_load_rejects_a_non_positive_retention(
     _write_settings(config_paths, {**settings_document, "retention": {"max_age_days": 0}})
 
     with pytest.raises(ConfigValidationError):
+        SettingsLoader(config_paths).load()
+
+
+def test_the_data_root_comes_from_the_environment(
+    config_paths: ConfigPaths,
+    settings_document: dict[str, object],
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    _write_settings(config_paths, settings_document)
+    monkeypatch.setenv("RSC_DATA_ROOT", str(tmp_path / "company-disk"))
+
+    assert SettingsLoader(config_paths).load().storage.data_root == tmp_path / "company-disk"
+
+
+def test_the_data_root_can_come_from_the_env_file(
+    config_paths: ConfigPaths,
+    settings_document: dict[str, object],
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    _write_settings(config_paths, settings_document)
+    monkeypatch.delenv("RSC_DATA_ROOT")
+    config_paths.env_file.write_text(f"RSC_DATA_ROOT={tmp_path / 'from-file'}\n", encoding="utf-8")
+
+    assert SettingsLoader(config_paths).load().storage.data_root == tmp_path / "from-file"
+
+
+def test_a_missing_data_root_is_reported(
+    config_paths: ConfigPaths, settings_document: dict[str, object], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_settings(config_paths, settings_document)
+    monkeypatch.delenv("RSC_DATA_ROOT")
+
+    with pytest.raises(MissingSettingError):
         SettingsLoader(config_paths).load()

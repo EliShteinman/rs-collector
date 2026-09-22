@@ -58,6 +58,13 @@ def settings_document(tmp_path: Path) -> dict[str, object]:
     }
 
 
+@pytest.fixture(autouse=True)
+def data_root_environment(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    data_root = tmp_path / "data"
+    monkeypatch.setenv("RSC_DATA_ROOT", str(data_root))
+    return data_root
+
+
 @pytest.fixture
 def app_settings(settings_document: dict[str, object]) -> AppSettings:
     return AppSettings.model_validate(settings_document)

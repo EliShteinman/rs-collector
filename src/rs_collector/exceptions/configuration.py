@@ -19,3 +19,7 @@ class ConfigValidationError(ConfigurationError):
 
 class MissingCredentialsError(ConfigurationError):
     pass
+
+
+class MissingSettingError(ConfigurationError):
+    pass

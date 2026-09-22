@@ -15,6 +15,7 @@ from rs_collector.exceptions.configuration import (
     ConfigurationError,
     ConfigValidationError,
     MissingCredentialsError,
+    MissingSettingError,
 )
 from rs_collector.exceptions.privileges import PrivilegeError, RunningAsRootError
 from rs_collector.exceptions.remote import (
@@ -66,6 +67,7 @@ __all__ = [
     "FileTransferError",
     "MetadataError",
     "MissingCredentialsError",
+    "MissingSettingError",
     "PackageNotFoundError",
     "PrivilegeError",
     "RemoteCommandError",
