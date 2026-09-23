@@ -7,6 +7,7 @@ from tests.fakes import FakeCrontab
 from rs_collector.analysis.repository import AnalysisRepository
 from rs_collector.background.crontab import CrontabInstaller
 from rs_collector.background.pid_file import PidFile
+from rs_collector.exceptions.background import CrontabError
 from rs_collector.packages.models import PackageMetadata
 from rs_collector.packages.repository import PackageRepository
 from rs_collector.retention.cleaner import CleanupReport
@@ -94,3 +95,27 @@ def test_the_stored_packages_are_counted(service: StatusService, app_settings: A
     assert storage.packages == 2
     assert storage.packages_bytes == 4_194_304
     assert storage.pinned == 1
+
+
+class RefusedCrontab:
+    def read(self) -> str:
+        raise CrontabError("crontab: you are not allowed to use this program")
+
+    def write(self, content: str) -> None:
+        raise CrontabError("crontab: you are not allowed to use this program")
+
+
+def test_a_refused_crontab_only_means_nothing_is_scheduled(
+    app_settings: AppSettings,
+) -> None:
+    app_settings.storage.data_root.mkdir(parents=True, exist_ok=True)
+    service = StatusService(
+        app_settings,
+        PidFile(app_settings.storage.locks_dir / app_settings.background.pid_file_name),
+        CrontabInstaller(RefusedCrontab(), app_settings.background.crontab_marker),
+        CleanupHistory(app_settings.storage),
+        PackageRepository(app_settings.storage),
+        AnalysisRepository(app_settings.storage),
+    )
+
+    assert service.collect().schedule.starts_after_reboot is False

@@ -4,6 +4,8 @@ from pathlib import Path
 from rs_collector.analysis.repository import AnalysisRepository
 from rs_collector.background.crontab import CrontabInstaller
 from rs_collector.background.pid_file import PidFile
+from rs_collector.exceptions.background import CrontabError
+from rs_collector.logging_setup.configurator import LoggerFactory
 from rs_collector.packages.repository import PackageRepository
 from rs_collector.retention.history import CleanupHistory
 from rs_collector.settings.models import AppSettings
@@ -26,6 +28,7 @@ class StatusService:
         self._history = history
         self._packages = packages
         self._analyses = analyses
+        self._logger = LoggerFactory.for_component("status")
 
     def collect(self) -> SystemStatus:
         return SystemStatus(
@@ -39,7 +42,7 @@ class StatusService:
     def _schedule(self) -> ScheduleStatus:
         last = self._history.last()
         return ScheduleStatus(
-            starts_after_reboot=self._crontab.installed(),
+            starts_after_reboot=self._starts_after_reboot(),
             cleanup_schedule=self._settings.background.cleanup_schedule,
             cleanup_last_run=last.finished_at if last is not None else None,
             removed_last_run=(
@@ -47,6 +50,13 @@ class StatusService:
             ),
             keeps_days=self._settings.retention.max_age_days,
         )
+
+    def _starts_after_reboot(self) -> bool:
+        try:
+            return self._crontab.installed()
+        except CrontabError as error:
+            self._logger.warning("The crontab cannot be read: %s", error)
+            return False
 
     def _storage(self) -> StorageStatus:
         storage = self._settings.storage

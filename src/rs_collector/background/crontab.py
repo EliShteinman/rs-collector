@@ -37,8 +37,8 @@ class SystemCrontab:
             return subprocess.run(
                 list(argv), input=content, capture_output=True, text=True, check=False
             )
-        except FileNotFoundError as error:
-            raise CrontabError("The crontab command is not installed") from error
+        except OSError as error:
+            raise CrontabError(f"The crontab command cannot be used: {error}") from error
 
 
 class CrontabInstaller:

@@ -31,3 +31,10 @@ def test_a_missing_crontab_command_is_reported(mocker: MockerFixture) -> None:
 
     with pytest.raises(CrontabError):
         SystemCrontab().write("")
+
+
+def test_a_forbidden_crontab_is_reported(mocker: MockerFixture) -> None:
+    mocker.patch("subprocess.run", side_effect=PermissionError("not allowed"))
+
+    with pytest.raises(CrontabError):
+        SystemCrontab().read()
