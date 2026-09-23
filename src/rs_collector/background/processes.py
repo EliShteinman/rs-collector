@@ -5,6 +5,8 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Protocol
 
+from rs_collector.runtime.environment import SpawnEnvironment
+
 _NO_HANG = os.WNOHANG
 _EXISTENCE_SIGNAL = 0
 _ENCODING = "utf-8"
@@ -15,6 +17,9 @@ class ProcessSpawner(Protocol):
 
 
 class DetachedSpawner:
+    def __init__(self, environment: SpawnEnvironment | None = None) -> None:
+        self._environment = environment or SpawnEnvironment()
+
     def spawn(self, argv: Sequence[str], log_path: Path) -> int:
         log_path.parent.mkdir(parents=True, exist_ok=True)
         with log_path.open("a", encoding=_ENCODING) as log_file:
@@ -25,6 +30,7 @@ class DetachedSpawner:
                 stderr=subprocess.STDOUT,
                 start_new_session=True,
                 close_fds=True,
+                env=self._environment.for_a_new_process(),
             )
         return process.pid
 
