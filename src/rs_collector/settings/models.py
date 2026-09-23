@@ -65,6 +65,7 @@ class StorageSettings(BaseModel):
     package_archive_name: str
     package_metadata_name: str
     analysis_metadata_name: str
+    cleanup_history_name: str
 
     @property
     def packages_dir(self) -> Path:
@@ -77,6 +78,10 @@ class StorageSettings(BaseModel):
     @property
     def locks_dir(self) -> Path:
         return self.data_root / self.locks_dir_name
+
+    @property
+    def cleanup_history_file(self) -> Path:
+        return self.data_root / self.cleanup_history_name
 
     @property
     def logs_dir(self) -> Path:

@@ -25,6 +25,7 @@ from rs_collector.packages.selector import InteractivePackageSelector
 from rs_collector.remote.cluster_connector import ClusterConnector
 from rs_collector.remote.connector import ParamikoHostConnector
 from rs_collector.retention.cleaner import RetentionCleaner
+from rs_collector.retention.history import CleanupHistory
 from rs_collector.retention.pin import PinService
 from rs_collector.retention.policy import RetentionPolicy
 from rs_collector.selection.connection_string import ConnectionStringParser
@@ -36,6 +37,7 @@ from rs_collector.settings.credentials import SshCredentials
 from rs_collector.settings.loader import SettingsLoader
 from rs_collector.settings.models import AppSettings
 from rs_collector.settings.paths import ConfigPaths, ConfigPathsResolver
+from rs_collector.status.service import StatusService
 from rs_collector.web.application import WebApplication
 from rs_collector.web.server import WebServer
 from rs_collector.workflows.analyze import AnalyzeWorkflow
@@ -84,7 +86,22 @@ class Container:
             self.packages(),
             self.analyses(),
             RetentionPolicy(max_age_days=self._settings.retention.max_age_days),
+            self.cleanup_history(),
         )
+
+    def status(self) -> StatusService:
+        background = self._settings.background
+        return StatusService(
+            self._settings,
+            PidFile(self._settings.storage.locks_dir / background.pid_file_name),
+            self.crontab(),
+            self.cleanup_history(),
+            self.packages(),
+            self.analyses(),
+        )
+
+    def cleanup_history(self) -> CleanupHistory:
+        return CleanupHistory(self._settings.storage)
 
     def server_launcher(self) -> ServerLauncher:
         background = self._settings.background

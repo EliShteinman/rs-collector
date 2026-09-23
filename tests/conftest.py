@@ -42,6 +42,7 @@ def settings_document(tmp_path: Path) -> dict[str, object]:
             "package_archive_name": "support_package.tar.gz",
             "package_metadata_name": "package.json",
             "analysis_metadata_name": "analysis.json",
+            "cleanup_history_name": "last_cleanup.json",
         },
         "remote": {
             "rladmin_path": "/opt/redislabs/bin/rladmin",
