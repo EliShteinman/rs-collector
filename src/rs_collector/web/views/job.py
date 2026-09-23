@@ -7,7 +7,10 @@ from rs_collector.web.views.layout import page, template
 from rs_collector.web.views.time_text import stamp
 
 _CONTENT = template("""
-<section class="panel" data-job="{{ job.id }}" data-log-url="{{ url('/api/jobs/' + job.id) }}">
+<section class="panel"
+  data-job="{{ job.id }}"
+  data-log-url="{{ url('/api/jobs/' + job.id) }}"
+  data-next-line="{{ job.next_line }}">
   <div class="job-head">
     <h2>{{ job.title }}</h2>
     <span class="tag {{ job.status }}" id="job-status">{{ job.status }}</span>

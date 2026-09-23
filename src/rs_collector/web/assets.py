@@ -366,7 +366,7 @@ JAVASCRIPT = """
   var status = document.getElementById('job-status');
   var outcome = document.getElementById('job-outcome');
   var report = document.getElementById('job-report');
-  var next = log.textContent ? log.textContent.replace(/\\n$/, '').split('\\n').length : 0;
+  var next = parseInt(card.dataset.nextLine || '0', 10);
 
   function poll() {
     fetch(logUrl + '?from=' + next, { headers: { 'Accept': 'application/json' } })
@@ -375,7 +375,9 @@ JAVASCRIPT = """
         if (data.lines.length) {
           log.textContent += data.lines.join('\\n') + '\\n';
           log.scrollTop = log.scrollHeight;
-          next += data.lines.length;
+        }
+        if (typeof data.next_line === 'number') {
+          next = data.next_line;
         }
         status.textContent = data.status;
         status.className = 'tag ' + data.status;

@@ -40,7 +40,8 @@ _UNEXPECTED = "The server hit an unexpected error. The details are in the rsc lo
 class WebApplication:
     def __init__(self, container: WebContext, jobs: JobRegistry | None = None) -> None:
         self._container = container
-        self._jobs = jobs or JobRegistry()
+        serve = container.settings.serve
+        self._jobs = jobs or JobRegistry(serve.max_jobs, serve.max_job_lines)
         self._router = self._routes()
         self._logger = LoggerFactory.for_component("web")
 

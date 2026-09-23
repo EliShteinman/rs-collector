@@ -43,6 +43,8 @@ class ServeSettings(BaseModel):
     )
     max_inline_bytes: int = Field(gt=0, description="How much of a log file the browser shows")
     max_log_lines: int = Field(gt=0, description="How many log lines the viewer renders")
+    max_jobs: int = Field(gt=0, description="How many finished runs the console remembers")
+    max_job_lines: int = Field(gt=0, description="How many log lines a run keeps")
 
 
 class BackgroundSettings(BaseModel):

@@ -10,6 +10,8 @@ from rs_collector.jobs.models import JobKind, JobView
 from rs_collector.logging_setup.configurator import LoggerFactory
 
 _IDENTIFIER_LENGTH = 12
+_DEFAULT_MAX_JOBS = 50
+_DEFAULT_MAX_LINES = 2000
 
 
 class JobOutcome:
@@ -19,17 +21,22 @@ class JobOutcome:
 
 
 class JobRegistry:
-    def __init__(self) -> None:
+    def __init__(
+        self, max_jobs: int = _DEFAULT_MAX_JOBS, max_lines: int = _DEFAULT_MAX_LINES
+    ) -> None:
+        self._max_jobs = max_jobs
+        self._max_lines = max_lines
         self._jobs: dict[str, Job] = {}
         self._order: list[str] = []
         self._lock = threading.Lock()
         self._logger = LoggerFactory.for_component("jobs")
 
     def start(self, kind: JobKind, title: str, work: Callable[[Job], JobOutcome]) -> Job:
-        job = Job(uuid.uuid4().hex[:_IDENTIFIER_LENGTH], kind, title)
+        job = Job(uuid.uuid4().hex[:_IDENTIFIER_LENGTH], kind, title, self._max_lines)
         with self._lock:
             self._jobs[job.id] = job
             self._order.append(job.id)
+            self._forget_the_oldest()
         threading.Thread(target=self._run, args=(job, work), daemon=True).start()
         self._logger.info("Started the %s job %s: %s", kind.value, job.id, title)
         return job
@@ -45,6 +52,12 @@ class JobRegistry:
         with self._lock:
             jobs = [self._jobs[identifier] for identifier in reversed(self._order)]
         return tuple(job.view() for job in jobs)
+
+    def _forget_the_oldest(self) -> None:
+        while len(self._order) > self._max_jobs:
+            forgotten = self._order.pop(0)
+            del self._jobs[forgotten]
+            self._logger.debug("Forgot the job %s", forgotten)
 
     def _run(self, job: Job, work: Callable[[Job], JobOutcome]) -> None:
         with JobLogCapture(job):

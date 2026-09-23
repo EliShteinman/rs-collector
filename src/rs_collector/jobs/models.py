@@ -25,6 +25,7 @@ class JobView(BaseModel):
     started_at: datetime
     finished_at: datetime | None = Field(default=None)
     lines: tuple[str, ...] = Field(default=())
+    next_line: int = Field(default=0, ge=0)
     outcome: str = Field(default="")
     report_url: str = Field(default="")
 
