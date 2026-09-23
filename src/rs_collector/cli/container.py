@@ -108,15 +108,12 @@ class Container:
 
     def analyze_workflow(self) -> AnalyzeWorkflow:
         return AnalyzeWorkflow(
-            InteractivePackageSelector(self.packages(), ChoicePrompt(self._console)),
-            AnalysisOptionsPrompt(self._console),
             RedisScopeRunner(self.analyses(), self._settings.analysis, self._settings.storage),
             self._console,
         )
 
-    def collect_workflow(self, connection_string: str | None = None) -> CollectWorkflow:
+    def collect_workflow(self) -> CollectWorkflow:
         return CollectWorkflow(
-            self._cluster_selector(connection_string),
             ClusterConnector(
                 ParamikoHostConnector(
                     self._credentials,
@@ -129,9 +126,22 @@ class Container:
             self._settings.remote,
             self._credentials,
             self._console,
-            ConfirmPrompt(self._console),
-            self.analyze_workflow(),
         )
+
+    def package_selector(self) -> InteractivePackageSelector:
+        return InteractivePackageSelector(self.packages(), ChoicePrompt(self._console))
+
+    def options_prompt(self) -> AnalysisOptionsPrompt:
+        return AnalysisOptionsPrompt(self._console)
+
+    def confirm_prompt(self) -> ConfirmPrompt:
+        return ConfirmPrompt(self._console)
+
+    def inventory(self) -> InventoryRepository:
+        return self._inventory
+
+    def cluster_selector(self, connection_string: str | None = None) -> ClusterSelector:
+        return self._cluster_selector(connection_string)
 
     def _cluster_selector(self, connection_string: str | None) -> ClusterSelector:
         if connection_string is None:

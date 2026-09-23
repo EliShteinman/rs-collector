@@ -8,5 +8,7 @@ class AnalyzeCommand:
         self._container = container
 
     def execute(self) -> int:
-        self._container.analyze_workflow().run()
+        package = self._container.package_selector().select()
+        options = self._container.options_prompt().ask()
+        self._container.analyze_workflow().run_for(package, options)
         return _EXIT_SUCCESS
