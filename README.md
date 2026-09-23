@@ -86,6 +86,12 @@ The same actions are available on the command line:
 ./rsc serve                             # the web interface in the foreground
 ```
 
+## Who can use it
+
+The web interface has no login. Anyone who can reach the port can collect, analyze and read
+everything, and a collection they start uses the SSH credentials of the user who started the
+server. Keep it on an internal network, or put authentication in front of it in NGINX.
+
 ## Behind a reverse proxy
 
 rsc speaks plain HTTP on one port and needs no websockets, so it sits behind NGINX
