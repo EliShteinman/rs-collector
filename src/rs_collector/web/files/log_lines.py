@@ -2,6 +2,8 @@ import re
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from rs_collector.terminal.escapes import as_shown
+
 _ENCODING = "utf-8"
 _LEVEL_WORDS = (
     ("critical", re.compile(r"\b(critical|fatal|panic)\b", re.IGNORECASE)),
@@ -15,6 +17,8 @@ _REDIS_MARKER = re.compile(r"^\d+:[A-Za-z]+ .{0,40}?([#*\-.]) ")
 _REDIS_LEVELS = {"#": "warning", "*": "notice", "-": "info", ".": "debug"}
 _PREFIX_LENGTH = 160
 _PLAIN = "plain"
+_BREAK = "\n"
+_WINDOWS_BREAK = "\r\n"
 
 
 class LogLine(BaseModel):
@@ -47,7 +51,7 @@ class LogReader:
 
     def parse(self, content: bytes) -> LogContent:
         text = content.decode(_ENCODING, errors="replace")
-        rows = text.splitlines()
+        rows = [as_shown(row) for row in _rows(text)]
         shown = rows[-self._max_lines :] if len(rows) > self._max_lines else rows
         first = len(rows) - len(shown) + 1
         return LogContent(
@@ -81,3 +85,10 @@ def _word_level(line: str) -> str | None:
         if pattern.search(head):
             return name
     return None
+
+
+def _rows(text: str) -> list[str]:
+    rows = text.replace(_WINDOWS_BREAK, _BREAK).split(_BREAK)
+    if rows and not rows[-1]:
+        rows.pop()
+    return rows

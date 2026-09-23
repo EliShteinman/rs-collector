@@ -82,3 +82,23 @@ def test_the_raw_logs_directory_is_found(directory: Path) -> None:
 
 def test_no_raw_logs_before_the_package_is_extracted(directory: Path) -> None:
     assert AnalysisOutputs(_analysis(directory)).raw_logs() is None
+
+
+def test_the_run_log_of_the_analyzer_is_found(directory: Path) -> None:
+    (directory / "analysis_console.log").write_text("started\n", encoding="utf-8")
+
+    assert AnalysisOutputs(_analysis(directory)).analyzer_log() == (
+        directory / "analysis_console.log"
+    )
+
+
+def test_the_analyzer_own_log_is_used_when_there_is_no_console_log(directory: Path) -> None:
+    (directory / "redisscope_current.log").write_text("analyzing\n", encoding="utf-8")
+
+    assert AnalysisOutputs(_analysis(directory)).analyzer_log() == (
+        directory / "redisscope_current.log"
+    )
+
+
+def test_no_run_log_before_the_analyzer_started(directory: Path) -> None:
+    assert AnalysisOutputs(_analysis(directory)).analyzer_log() is None

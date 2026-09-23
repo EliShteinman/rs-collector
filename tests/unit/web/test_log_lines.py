@@ -69,3 +69,16 @@ def test_the_levels_present_are_listed() -> None:
 )
 def test_the_strongest_signal_in_a_redis_line_wins(line: str, expected: str) -> None:
     assert level_of(line) == expected
+
+
+def test_a_progress_line_shows_only_what_the_terminal_would_show() -> None:
+    content = LogReader(max_lines=10).parse(b"reading 10%\rreading 60%\rreading 100%\ndone\n")
+
+    assert [line.text for line in content.lines] == ["reading 100%", "done"]
+
+
+def test_the_colour_codes_are_dropped() -> None:
+    content = LogReader(max_lines=10).parse(b"\x1b[31mERROR broken\x1b[0m\n")
+
+    assert content.lines[0].text == "ERROR broken"
+    assert content.lines[0].level == "error"

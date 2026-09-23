@@ -23,6 +23,7 @@ class AnalysisLinks(BaseModel):
     files: str
     report: str = Field(default="")
     raw_logs: str = Field(default="")
+    analyzer_log: str = Field(default="")
 
 
 _CONTENT = template("""
@@ -210,6 +211,9 @@ _CONTENT = template("""
           {% endif %}
           {% if links[analysis.name].raw_logs %}
           <a href="{{ url(links[analysis.name].raw_logs) }}">Raw logs</a>
+          {% endif %}
+          {% if links[analysis.name].analyzer_log %}
+          <a href="{{ url(links[analysis.name].analyzer_log) }}">Run log</a>
           {% endif %}
           <a href="{{ url(links[analysis.name].files) }}">All files</a>
           {{ keep_button(analysis.name, analysis.metadata.pinned) }}
