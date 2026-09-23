@@ -25,6 +25,7 @@ class AnalysisLinks(BaseModel):
     raw_logs: str = Field(default="")
     analyzer_log: str = Field(default="")
     analyzer_logs: str = Field(default="")
+    databases: str = Field(default="")
 
 
 _CONTENT = template("""
@@ -223,6 +224,9 @@ _CONTENT = template("""
           <a href="{{ url(links[analysis.name].analyzer_logs) }}">All its logs</a>
           {% endif %}
           <a href="{{ url(links[analysis.name].files) }}">All files</a>
+          {% if links[analysis.name].databases %}
+          <a href="{{ url(links[analysis.name].databases) }}">Logs by database</a>
+          {% endif %}
           {{ keep_button(analysis.name, analysis.metadata.pinned) }}
         </td>
       </tr>

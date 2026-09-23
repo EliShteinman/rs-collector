@@ -43,6 +43,11 @@ class PagesController:
             raw_logs=self._relative(analysis, logs),
             analyzer_log=self._relative(analysis, outputs.analyzer_log()),
             analyzer_logs=self._relative(analysis, outputs.analyzer_log_directory()),
+            databases=(
+                f"{_ANALYSES_PATH}{analysis.name}/databases"
+                if outputs.raw_logs() is not None
+                else ""
+            ),
         )
 
     def _relative(self, analysis: StoredAnalysis, target: object) -> str:

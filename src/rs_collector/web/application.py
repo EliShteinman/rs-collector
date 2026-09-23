@@ -1,4 +1,5 @@
 from rs_collector.exceptions.base import RsCollectorError
+from rs_collector.exceptions.dblogs import DatabaseNotFoundError, NoLogsForDatabaseError
 from rs_collector.exceptions.jobs import JobNotFoundError
 from rs_collector.exceptions.selection import ClusterNotFoundError
 from rs_collector.exceptions.storage import (
@@ -11,6 +12,7 @@ from rs_collector.jobs.registry import JobRegistry
 from rs_collector.logging_setup.configurator import LoggerFactory
 from rs_collector.web.context import WebContext
 from rs_collector.web.controllers.assets import AssetsController
+from rs_collector.web.controllers.databases import DatabasesController
 from rs_collector.web.controllers.files import FilesController
 from rs_collector.web.controllers.jobs import JobsController
 from rs_collector.web.controllers.pages import PagesController
@@ -30,6 +32,8 @@ _NOT_FOUND = (
     PackageNotFoundError,
     ClusterNotFoundError,
     AnalysisNotFoundError,
+    DatabaseNotFoundError,
+    NoLogsForDatabaseError,
 )
 _NOT_FOUND_STATUS = 404
 _BAD_REQUEST_STATUS = 400
@@ -71,6 +75,7 @@ class WebApplication:
         )
         assets = AssetsController()
         retention = RetentionController(self._container)
+        databases = DatabasesController(self._container)
         router = Router()
         router.add(_GET, "/", pages.index)
         router.add(_POST, "/collect", jobs.collect)
@@ -79,6 +84,8 @@ class WebApplication:
         router.add(_POST, "/release", retention.release)
         router.add(_GET, "/jobs/{identifier}", jobs.show)
         router.add(_GET, "/api/jobs/{identifier}", jobs.log)
+        router.add(_GET, "/analyses/{name}/databases", databases.show)
+        router.add(_POST, "/database-logs", databases.collect)
         router.add(_GET, "/analyses/{path*}", files.serve)
         router.add(_GET, "/analyses", files.serve)
         router.add(_GET, "/static/app.css", assets.stylesheet)
