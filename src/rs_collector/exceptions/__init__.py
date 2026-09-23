@@ -58,6 +58,7 @@ from rs_collector.exceptions.storage import (
     PackageNotFoundError,
     StorageError,
 )
+from rs_collector.exceptions.web import BadRequestError, RouteNotFoundError, WebError
 
 __all__ = [
     "AnalysisError",
@@ -67,6 +68,7 @@ __all__ = [
     "AnalyzerStartError",
     "ArtifactNotFoundError",
     "BackgroundError",
+    "BadRequestError",
     "ClusterNotFoundError",
     "ClusterUnreachableError",
     "CollectionAlreadyRunningError",
@@ -97,6 +99,7 @@ __all__ = [
     "RemoteError",
     "RootEscalationError",
     "RootSessionClosedError",
+    "RouteNotFoundError",
     "RsCollectorError",
     "RunningAsRootError",
     "SelectionAbortedError",
@@ -107,4 +110,5 @@ __all__ = [
     "SshConnectionError",
     "StorageError",
     "TransferIntegrityError",
+    "WebError",
 ]
