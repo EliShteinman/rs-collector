@@ -139,7 +139,7 @@ class Container:
                 self.analyses(),
                 self._settings.analysis,
                 self._settings.storage,
-                on_line=self._console.write,
+                on_line=self._console_line,
             ),
             self._console,
         )

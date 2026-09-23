@@ -212,9 +212,9 @@ def test_a_progress_line_arrives_as_it_is_rewritten(
 
     runner.analyze(package, AnalysisOptions())
 
-    assert ("reading the package", True) in updates
+    assert updates[0] == ("reading the package", False)
     assert (" 10% read", True) in updates
-    assert ("100% read", False) in updates
+    assert ("100% read", True) in updates
 
 
 def test_the_colour_codes_never_reach_the_log(

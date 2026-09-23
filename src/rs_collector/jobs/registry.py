@@ -68,5 +68,10 @@ class JobRegistry:
                 job.failed(str(error))
                 self._logger.error("The job %s failed: %s", job.id, error)
                 return
+            except Exception as error:
+                job.write(f"Error: {error}")
+                job.failed(f"The run stopped unexpectedly: {error}")
+                self._logger.exception("The job %s crashed", job.id)
+                return
             job.succeeded(outcome.message, outcome.report_url)
             self._logger.info("The job %s finished", job.id)

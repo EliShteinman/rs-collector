@@ -107,6 +107,9 @@ def clean_environment(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
 
 
 _FAKE_ANALYZER = """#!/bin/sh
+echo "RedisScope starting with: $@"
+printf 'extracting the package'
+printf '\r100%% extracted\n'
 mkdir -p redisscope_html
 echo "<html>the report</html>" > redisscope_html/report.html
 """

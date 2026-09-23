@@ -171,3 +171,15 @@ def test_the_reader_is_told_where_to_continue() -> None:
     later = registry.get(job.id).view(from_line=1)
     assert later.lines == everything.lines[1:]
     assert later.next_line == everything.next_line == len(everything.lines)
+
+
+def test_a_job_that_crashes_is_marked_failed(registry: JobRegistry) -> None:
+    def work(_: Job) -> JobOutcome:
+        raise TypeError("nobody expected this")
+
+    job = registry.start(JobKind.ANALYZE, "demo", work)
+    _wait_until_finished(registry, job.id)
+
+    view = registry.get(job.id).view()
+    assert view.status is JobStatus.FAILED
+    assert "nobody expected this" in view.outcome

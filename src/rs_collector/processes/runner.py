@@ -90,22 +90,22 @@ class SubprocessRunner:
         decoder = codecs.getincrementaldecoder(_ENCODING)(errors="replace")
         with log_path.open("w", encoding=_ENCODING, newline="") as log_file:
             pending = ""
+            open_line = False
             while chunk := os.read(output.fileno(), _READ_SIZE):
                 text = decoder.decode(chunk)
                 log_file.write(text)
                 log_file.flush()
-                pending = self._emitted(pending + text, on_line)
-            self._emit(pending, overwrite=False, on_line=on_line)
+                pending, open_line = self._emitted(pending + text, on_line, open_line)
+            self._emit(pending, overwrite=open_line, on_line=on_line)
 
-    def _emitted(self, buffered: str, on_line: LineReader | None) -> str:
+    def _emitted(
+        self, buffered: str, on_line: LineReader | None, open_line: bool
+    ) -> tuple[str, bool]:
         while match := _BREAK.search(buffered):
-            self._emit(
-                buffered[: match.start()],
-                overwrite=match.group() == _CARRIAGE_RETURN,
-                on_line=on_line,
-            )
+            self._emit(buffered[: match.start()], overwrite=open_line, on_line=on_line)
+            open_line = match.group() == _CARRIAGE_RETURN
             buffered = buffered[match.end() :]
-        return buffered
+        return buffered, open_line
 
     def _emit(self, text: str, overwrite: bool, on_line: LineReader | None) -> None:
         if on_line is None or not text:

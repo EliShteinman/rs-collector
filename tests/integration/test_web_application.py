@@ -419,3 +419,12 @@ def test_the_finished_job_links_to_the_report_that_was_written(
     written = AnalysisOutputs(container.analyses().list()[0]).report()
     assert written is not None
     assert f"redisscope_html/{written.name}" in body
+
+
+def test_the_analyzer_output_reaches_the_job_log(application: WebApplication, package: str) -> None:
+    job_url = _post(application, "/analyze", f"package={package}&depth=default").headers["Location"]
+
+    finished = _wait_for_job(application, job_url).body.decode()
+
+    assert "RedisScope starting with" in finished
+    assert "100% extracted" in finished
