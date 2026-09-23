@@ -5,22 +5,31 @@ from pathlib import Path
 from rs_collector.exceptions.storage import ArtifactNotFoundError
 from rs_collector.logging_setup.configurator import LoggerFactory
 from rs_collector.web.files import media
+from rs_collector.web.files.log_lines import LogReader
 from rs_collector.web.files.reader import FileReader
 from rs_collector.web.http import Request, Response
-from rs_collector.web.views import listing
+from rs_collector.web.views import listing, logview
 
 _ANALYSES_PATH = "/analyses/"
 _RAW_FLAG = "raw"
 _LIST_FLAG = "list"
+_PLAIN_FLAG = "plain"
 _TRUTHY = ("1", "yes", "true")
 _INDEX_NAMES = ("index.html",)
 _SLASH = "/"
 
 
 class FilesController:
-    def __init__(self, root: Path, reader: FileReader, heading: str = "Analyses") -> None:
+    def __init__(
+        self,
+        root: Path,
+        reader: FileReader,
+        logs: LogReader,
+        heading: str = "Analyses",
+    ) -> None:
         self._root = root
         self._reader = reader
+        self._logs = logs
         self._heading = heading
         self._logger = LoggerFactory.for_component("web.files")
 
@@ -33,6 +42,8 @@ class FilesController:
             return self._directory(request, target, relative)
         if target.is_file():
             body, content_type = self._reader.read(target, raw=_wants_raw(request))
+            if self._shows_a_log(request, target):
+                return self._log(request, target, body, relative)
             return Response.file(body, content_type)
         raise ArtifactNotFoundError(f"{_ANALYSES_PATH}{relative} does not exist")
 
@@ -74,6 +85,21 @@ class FilesController:
                 if child.is_file() and media.is_readable_text(child)
                 else ""
             ),
+        )
+
+    def _shows_a_log(self, request: Request, target: Path) -> bool:
+        return media.is_log(target) and not _wants_raw(request) and not _flag(request, _PLAIN_FLAG)
+
+    def _log(self, request: Request, target: Path, body: bytes, relative: str) -> Response:
+        return Response.html(
+            logview.render(
+                request.url,
+                name=target.name,
+                content=self._logs.parse(body),
+                byte_count=target.stat().st_size,
+                raw_url=f"{_ANALYSES_PATH}{relative}?raw=1",
+                parent_url=self._parent(relative) or _ANALYSES_PATH,
+            )
         )
 
     def _index_of(self, target: Path) -> Path | None:

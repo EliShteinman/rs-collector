@@ -32,6 +32,7 @@ serve:
   port: 3923
   base_path: ""
   max_inline_bytes: 5242880
+  max_log_lines: 5000
 
 background:
   pid_file_name: serve.pid

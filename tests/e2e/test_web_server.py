@@ -28,7 +28,11 @@ def _free_port() -> int:
 @pytest.fixture
 def base_url(container: Container) -> Iterator[str]:
     settings = ServeSettings(
-        host="127.0.0.1", port=_free_port(), base_path="", max_inline_bytes=5_242_880
+        host="127.0.0.1",
+        port=_free_port(),
+        base_path="",
+        max_inline_bytes=5_242_880,
+        max_log_lines=5_000,
     )
     server = WebServer(WebApplication(container), settings)
     with server.running() as port:

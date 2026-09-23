@@ -15,6 +15,7 @@ from rs_collector.web.controllers.files import FilesController
 from rs_collector.web.controllers.jobs import JobsController
 from rs_collector.web.controllers.pages import PagesController
 from rs_collector.web.controllers.retention import RetentionController
+from rs_collector.web.files.log_lines import LogReader
 from rs_collector.web.files.reader import FileReader
 from rs_collector.web.http import Request, Response
 from rs_collector.web.router import Router
@@ -65,6 +66,7 @@ class WebApplication:
         files = FilesController(
             self._container.settings.storage.analyses_dir,
             FileReader(self._container.settings.serve.max_inline_bytes),
+            LogReader(self._container.settings.serve.max_log_lines),
         )
         assets = AssetsController()
         retention = RetentionController(self._container)

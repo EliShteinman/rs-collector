@@ -5,6 +5,7 @@ _TEXT = "text/plain; charset=utf-8"
 _HTML = "text/html; charset=utf-8"
 _DEFAULT = "application/octet-stream"
 _GZIP_SUFFIX = ".gz"
+_LOG_SUFFIXES = (".log", ".out", ".err")
 _TEXT_SUFFIXES = (
     ".log",
     ".txt",
@@ -52,3 +53,7 @@ def _kind(name: Path) -> str:
 
 def is_readable_text(path: Path) -> bool:
     return content_type(path) in (_TEXT, _HTML)
+
+
+def is_log(path: Path) -> bool:
+    return _kind(uncompressed_name(path)) in _LOG_SUFFIXES

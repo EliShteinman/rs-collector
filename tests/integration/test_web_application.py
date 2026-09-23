@@ -203,7 +203,7 @@ def test_a_raw_log_is_shown_in_the_browser(
 
     response = _get(application, "/analyses/demo__default/redisscope_sp/redis-server.log")
 
-    assert response.content_type.startswith("text/plain")
+    assert response.content_type.startswith("text/html")
     assert b"the last line" in response.body
 
 
@@ -216,7 +216,7 @@ def test_a_rotated_log_is_unpacked_for_the_browser(
 
     response = _get(application, "/analyses/demo__default/redisscope_sp/redis-server.log.1.gz")
 
-    assert response.content_type.startswith("text/plain")
+    assert response.content_type.startswith("text/html")
     assert b"an older line" in response.body
 
 
@@ -302,3 +302,76 @@ def test_the_files_of_the_report_directory_can_still_be_listed(
     body = _get(application, "/analyses/demo__default/redisscope_html/", "list=1").body.decode()
 
     assert "cluster.html" in body
+
+
+def _write_log(container: Container, text: str, name: str = "redis-server.log") -> str:
+    logs = _analysis_directory(container) / "redisscope_sp"
+    logs.mkdir(parents=True, exist_ok=True)
+    (logs / name).write_text(text, encoding="utf-8")
+    return f"/analyses/demo__default/redisscope_sp/{name}"
+
+
+def test_a_log_is_shown_with_line_numbers(
+    application: WebApplication, container: Container
+) -> None:
+    url = _write_log(container, "first line\nsecond line\n")
+
+    body = _get(application, url).body.decode()
+
+    assert '<span class="ln">1</span>' in body
+    assert '<span class="ln">2</span>' in body
+
+
+def test_a_failing_line_is_marked_as_an_error(
+    application: WebApplication, container: Container
+) -> None:
+    url = _write_log(container, "2026-09-23 07:41 ERROR could not reach node2\n")
+
+    body = _get(application, url).body.decode()
+
+    assert 'class="logline error"' in body
+
+
+def test_the_viewer_offers_a_filter_and_the_levels_it_found(
+    application: WebApplication, container: Container
+) -> None:
+    url = _write_log(container, "ERROR broken\nWARNING careful\nplain line\n")
+
+    body = _get(application, url).body.decode()
+
+    assert 'id="log-filter"' in body
+    assert 'value="error"' in body and 'value="warning"' in body
+
+
+def test_a_log_can_still_be_read_as_plain_text(
+    application: WebApplication, container: Container
+) -> None:
+    url = _write_log(container, "just text\n")
+
+    response = _get(application, url, "plain=1")
+
+    assert response.content_type.startswith("text/plain")
+    assert response.body == b"just text\n"
+
+
+def test_a_log_can_be_downloaded_untouched(
+    application: WebApplication, container: Container
+) -> None:
+    url = _write_log(container, "just text\n")
+
+    response = _get(application, url, "raw=1")
+
+    assert response.body == b"just text\n"
+
+
+def test_a_report_is_not_treated_as_a_log(
+    application: WebApplication, container: Container
+) -> None:
+    directory = _analysis_directory(container)
+    (directory / "redisscope_healthcheck_report.html").write_text(
+        "<html>ok</html>", encoding="utf-8"
+    )
+
+    response = _get(application, "/analyses/demo__default/redisscope_healthcheck_report.html")
+
+    assert response.body == b"<html>ok</html>"

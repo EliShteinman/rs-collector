@@ -69,8 +69,10 @@ Open `http://<server>:3923/` and everything happens there:
 - watch the log of a running collection or analysis as it happens
 - open the finished reports, and keep any package or analysis beyond the retention period
 - browse every file RedisScope wrote, including the raw cluster logs it extracted into
-  `redisscope_sp/`. Logs open as text in the browser, rotated `.gz` logs are unpacked on the
-  way, and `?raw=1` downloads a file untouched
+  `redisscope_sp/`
+- read those logs in a viewer with line numbers, colours by severity, a filter box and a
+  toggle per level. Rotated `.gz` logs are unpacked on the way; `?plain=1` shows a log as
+  plain text and `?raw=1` downloads the file untouched
 
 The same actions are available on the command line:
 

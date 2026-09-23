@@ -261,6 +261,51 @@ td .note { margin-top: .1rem; }
 .outcome { margin: .9rem 0 0; font-weight: 600; }
 .back { font-size: .88rem; }
 
+.logbar {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  flex-wrap: wrap;
+  margin-bottom: .6rem;
+}
+.logbar input[type="search"] {
+  flex: 1 1 14rem;
+  min-width: 10rem;
+  padding: .4rem .5rem;
+  font: inherit;
+  color: inherit;
+  background: var(--page);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+.logbar .levels { display: flex; gap: .6rem; flex-wrap: wrap; font-size: .82rem; }
+.logbar .spacer { flex: 1; }
+
+.loglines {
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--page);
+  max-height: 34rem;
+  overflow: auto;
+  font: 400 12.5px/1.55 var(--mono);
+}
+.logline { display: flex; gap: .75rem; padding: 0 .6rem; }
+.logline:hover { background: var(--rule); }
+.logline .ln {
+  flex: 0 0 4.5rem;
+  text-align: right;
+  color: var(--ink-soft);
+  opacity: .65;
+  user-select: none;
+}
+.logline .lt { white-space: pre; flex: 1; }
+.loglines.wrap .logline .lt { white-space: pre-wrap; word-break: break-word; }
+.logline.error .lt, .logline.critical .lt { color: var(--brand); }
+.logline.critical { font-weight: 600; }
+.logline.warning .lt { color: var(--busy); }
+.logline.debug .lt { opacity: .7; }
+.logline.hidden { display: none; }
+
 .files { list-style: none; margin: 0; padding: 0; }
 .files li { padding: .4rem 0; border-bottom: 1px solid var(--rule); }
 .files li:last-child { border-bottom: 0; }
@@ -279,6 +324,40 @@ td .note { margin-top: .1rem; }
 """
 
 JAVASCRIPT = """
+(function () {
+  var view = document.querySelector('[data-log-view]');
+  if (view) {
+    var lines = Array.prototype.slice.call(view.querySelectorAll('.logline'));
+    var filter = document.getElementById('log-filter');
+    var wrap = document.getElementById('log-wrap');
+    var box = document.getElementById('log-lines');
+    var count = document.getElementById('log-count');
+    var toggles = Array.prototype.slice.call(view.querySelectorAll('.level-toggle'));
+
+    function apply() {
+      var needle = filter.value.toLowerCase();
+      var wanted = {};
+      toggles.forEach(function (toggle) { wanted[toggle.value] = toggle.checked; });
+      var shown = 0;
+      lines.forEach(function (line) {
+        var body = line.querySelector('.lt');
+        var text = (body ? body.textContent : '').toLowerCase();
+        var keep = wanted[line.dataset.level] !== false && text.indexOf(needle) !== -1;
+        line.classList.toggle('hidden', !keep);
+        if (keep) { shown += 1; }
+      });
+      count.textContent = shown === lines.length
+        ? ''
+        : 'Showing ' + shown + ' of ' + lines.length + ' lines.';
+    }
+
+    filter.addEventListener('input', apply);
+    toggles.forEach(function (toggle) { toggle.addEventListener('change', apply); });
+    wrap.addEventListener('change', function () { box.classList.toggle('wrap', wrap.checked); });
+    box.scrollTop = box.scrollHeight;
+  }
+})();
+
 (function () {
   var card = document.querySelector('[data-log-url]');
   if (!card) { return; }
