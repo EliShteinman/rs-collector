@@ -41,10 +41,7 @@ class FilesController:
                 return Response.redirect(request.url(f"{_ANALYSES_PATH}{relative}{_SLASH}"))
             return self._directory(request, target, relative)
         if target.is_file():
-            body, content_type = self._reader.read(target, raw=_wants_raw(request))
-            if self._shows_a_log(request, target):
-                return self._log(request, target, body, relative)
-            return Response.file(body, content_type)
+            return self._file(request, target, relative)
         raise ArtifactNotFoundError(f"{_ANALYSES_PATH}{relative} does not exist")
 
     def _resolved(self, relative: str) -> Path:
@@ -86,6 +83,14 @@ class FilesController:
                 else ""
             ),
         )
+
+    def _file(self, request: Request, target: Path, relative: str) -> Response:
+        if _wants_raw(request) or not media.is_readable_text(target):
+            return Response.stream(target, self._reader.raw_type(target, raw=_wants_raw(request)))
+        body, content_type = self._reader.read(target)
+        if self._shows_a_log(request, target):
+            return self._log(request, target, body, relative)
+        return Response.file(body, content_type)
 
     def _shows_a_log(self, request: Request, target: Path) -> bool:
         return media.is_log(target) and not _wants_raw(request) and not _flag(request, _PLAIN_FLAG)

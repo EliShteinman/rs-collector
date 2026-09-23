@@ -67,6 +67,8 @@ def settings_document(tmp_path: Path) -> dict[str, object]:
             "base_path": "",
             "max_inline_bytes": 5_242_880,
             "max_log_lines": 5_000,
+            "max_jobs": 50,
+            "max_job_lines": 2_000,
         },
         "background": {
             "pid_file_name": "serve.pid",

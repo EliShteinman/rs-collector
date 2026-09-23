@@ -361,7 +361,7 @@ def test_a_log_can_be_downloaded_untouched(
 
     response = _get(application, url, "raw=1")
 
-    assert response.body == b"just text\n"
+    assert response.payload() == b"just text\n"
 
 
 def test_a_report_is_not_treated_as_a_log(
@@ -375,3 +375,18 @@ def test_a_report_is_not_treated_as_a_log(
     response = _get(application, "/analyses/demo__default/redisscope_healthcheck_report.html")
 
     assert response.body == b"<html>ok</html>"
+
+
+def test_a_large_file_is_streamed_instead_of_being_held_in_memory(
+    application: WebApplication, container: Container
+) -> None:
+    directory = _analysis_directory(container) / "redisscope_all"
+    directory.mkdir(parents=True)
+    big = directory / "cluster_dump.bin"
+    big.write_bytes(b"x" * 3_000_000)
+
+    response = _get(application, "/analyses/demo__default/redisscope_all/cluster_dump.bin")
+
+    assert response.body == b""
+    assert response.size() == 3_000_000
+    assert sum(len(chunk) for chunk in response.chunks(65_536)) == 3_000_000

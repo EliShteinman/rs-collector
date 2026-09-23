@@ -33,6 +33,8 @@ def base_url(container: Container) -> Iterator[str]:
         base_path="",
         max_inline_bytes=5_242_880,
         max_log_lines=5_000,
+        max_jobs=50,
+        max_job_lines=2_000,
     )
     server = WebServer(WebApplication(container), settings)
     with server.running() as port:
@@ -85,3 +87,15 @@ def test_a_missing_page_answers_404(base_url: str) -> None:
     status, _ = _get(f"{base_url}/nothing")
 
     assert status == 404
+
+
+def test_a_large_file_arrives_whole_over_http(base_url: str, container: Container) -> None:
+    directory = container.settings.storage.analyses_dir / "demo__default" / "redisscope_all"
+    directory.mkdir(parents=True)
+    (directory / "cluster_dump.bin").write_bytes(b"y" * 2_000_000)
+
+    with urllib.request.urlopen(
+        f"{base_url}/analyses/demo__default/redisscope_all/cluster_dump.bin",
+        timeout=_TIMEOUT_SECONDS,
+    ) as response:
+        assert len(response.read()) == 2_000_000

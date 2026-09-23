@@ -18,10 +18,10 @@ class FileReader:
 
     def read(self, path: Path, raw: bool = False) -> tuple[bytes, str]:
         if raw or not media.is_readable_text(path):
-            return self._bytes(path), self._raw_type(path, raw)
+            return self._bytes(path), self.raw_type(path, raw)
         return self._text(path), media.content_type(path)
 
-    def _raw_type(self, path: Path, raw: bool) -> str:
+    def raw_type(self, path: Path, raw: bool) -> str:
         if raw and media.is_compressed(path):
             return "application/gzip"
         return media.content_type(path)

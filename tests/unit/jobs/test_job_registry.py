@@ -129,3 +129,45 @@ def test_the_newest_job_is_listed_first(registry: JobRegistry) -> None:
     _wait_until_finished(registry, second.id)
 
     assert [view.title for view in registry.list()] == ["second", "first"]
+
+
+def test_only_the_newest_runs_are_remembered() -> None:
+    registry = JobRegistry(max_jobs=2, max_lines=10)
+    for number in range(3):
+        started = registry.start(JobKind.ANALYZE, f"run {number}", lambda _: JobOutcome("done"))
+        _wait_until_finished(registry, started.id)
+
+    assert [view.title for view in registry.list()] == ["run 2", "run 1"]
+
+
+def test_a_talkative_job_keeps_its_last_lines() -> None:
+    registry = JobRegistry(max_jobs=10, max_lines=5)
+
+    def work(job: Job) -> JobOutcome:
+        for number in range(20):
+            job.write(f"line {number}")
+        return JobOutcome("done")
+
+    job = registry.start(JobKind.ANALYZE, "talkative", work)
+    _wait_until_finished(registry, job.id)
+
+    view = registry.get(job.id).view()
+    assert len(view.lines) == 5
+    assert "line 19" in view.lines
+
+
+def test_the_reader_is_told_where_to_continue() -> None:
+    registry = JobRegistry(max_jobs=10, max_lines=100)
+
+    def work(job: Job) -> JobOutcome:
+        job.write("first")
+        job.write("second")
+        return JobOutcome("done")
+
+    job = registry.start(JobKind.COLLECT, "demo", work)
+    _wait_until_finished(registry, job.id)
+
+    everything = registry.get(job.id).view()
+    later = registry.get(job.id).view(from_line=1)
+    assert later.lines == everything.lines[1:]
+    assert later.next_line == everything.next_line == len(everything.lines)

@@ -12,6 +12,7 @@ from rs_collector.web.http import Request
 
 _CONTENT_LENGTH = "Content-Length"
 _MAX_BODY_BYTES = 1_048_576
+_CHUNK_BYTES = 65_536
 _SERVER_NAME = "rsc"
 _SHUTDOWN_TIMEOUT_SECONDS = 5
 
@@ -91,10 +92,11 @@ class WebServer:
                 )
                 self.send_response(response.status)
                 self.send_header("Content-Type", response.content_type)
-                self.send_header(_CONTENT_LENGTH, str(len(response.body)))
+                self.send_header(_CONTENT_LENGTH, str(response.size()))
                 for name, value in response.headers.items():
                     self.send_header(name, value)
                 self.end_headers()
-                self.wfile.write(response.body)
+                for chunk in response.chunks(_CHUNK_BYTES):
+                    self.wfile.write(chunk)
 
         return Handler

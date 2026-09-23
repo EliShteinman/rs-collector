@@ -1,5 +1,6 @@
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field
+from pathlib import Path
 from urllib.parse import parse_qs
 
 _ENCODING = "utf-8"
@@ -51,6 +52,8 @@ class Response:
     body: bytes = b""
     content_type: str = _HTML
     headers: Mapping[str, str] = field(default_factory=dict)
+    source: Path | None = None
+    length: int | None = None
 
     @classmethod
     def html(cls, markup: str, status: int = 200) -> Response:
@@ -67,3 +70,21 @@ class Response:
     @classmethod
     def file(cls, content: bytes, content_type: str) -> Response:
         return cls(status=200, body=content, content_type=content_type)
+
+    @classmethod
+    def stream(cls, path: Path, content_type: str) -> Response:
+        return cls(status=200, content_type=content_type, source=path, length=path.stat().st_size)
+
+    def size(self) -> int:
+        return self.length if self.length is not None else len(self.body)
+
+    def chunks(self, chunk_size: int) -> Iterator[bytes]:
+        if self.source is None:
+            yield self.body
+            return
+        with self.source.open("rb") as stream:
+            while chunk := stream.read(chunk_size):
+                yield chunk
+
+    def payload(self) -> bytes:
+        return self.source.read_bytes() if self.source is not None else self.body
