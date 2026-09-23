@@ -102,3 +102,20 @@ def test_the_analyzer_own_log_is_used_when_there_is_no_console_log(directory: Pa
 
 def test_no_run_log_before_the_analyzer_started(directory: Path) -> None:
     assert AnalysisOutputs(_analysis(directory)).analyzer_log() is None
+
+
+def test_the_log_directory_of_the_analyzer_is_found(directory: Path) -> None:
+    (directory / "redisscope_logs").mkdir()
+
+    assert AnalysisOutputs(_analysis(directory)).analyzer_log_directory() == (
+        directory / "redisscope_logs"
+    )
+
+
+def test_the_monitoring_log_is_preferred_as_the_run_log(directory: Path) -> None:
+    (directory / "analysis_console.log").write_text("our capture\n", encoding="utf-8")
+    (directory / "redisscope_current.log").write_text("its own log\n", encoding="utf-8")
+
+    assert AnalysisOutputs(_analysis(directory)).analyzer_log() == (
+        directory / "redisscope_current.log"
+    )

@@ -4,13 +4,12 @@ import re
 import signal
 import subprocess
 import threading
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Protocol
 
 from rs_collector.exceptions.processes import ProcessStartError, ProcessTimeoutError
 from rs_collector.logging_setup.configurator import LoggerFactory
-from rs_collector.terminal.escapes import plain
 
 _ENCODING = "utf-8"
 _READ_SIZE = 65536
@@ -29,6 +28,7 @@ class ProcessRunner(Protocol):
         log_path: Path,
         timeout_seconds: int,
         on_line: LineReader | None = None,
+        environment: Mapping[str, str] | None = None,
     ) -> int: ...
 
 
@@ -43,9 +43,10 @@ class SubprocessRunner:
         log_path: Path,
         timeout_seconds: int,
         on_line: LineReader | None = None,
+        environment: Mapping[str, str] | None = None,
     ) -> int:
         self._logger.debug("Running %s in %s", " ".join(command), cwd)
-        process = self._started(command, cwd)
+        process = self._started(command, cwd, environment)
         watchdog = threading.Timer(timeout_seconds, self._terminate, args=(process,))
         watchdog.start()
         try:
@@ -63,7 +64,9 @@ class SubprocessRunner:
             )
         return exit_status
 
-    def _started(self, command: Sequence[str], cwd: Path) -> subprocess.Popen[bytes]:
+    def _started(
+        self, command: Sequence[str], cwd: Path, environment: Mapping[str, str] | None
+    ) -> subprocess.Popen[bytes]:
         try:
             return subprocess.Popen(
                 list(command),
@@ -71,6 +74,7 @@ class SubprocessRunner:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 start_new_session=True,
+                env=dict(environment) if environment is not None else None,
             )
         except OSError as error:
             raise ProcessStartError(f"{command[0]} cannot be executed: {error}") from error
@@ -110,4 +114,4 @@ class SubprocessRunner:
     def _emit(self, text: str, overwrite: bool, on_line: LineReader | None) -> None:
         if on_line is None or not text:
             return
-        on_line(plain(text), overwrite)
+        on_line(text, overwrite)

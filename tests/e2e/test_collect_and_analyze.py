@@ -74,6 +74,8 @@ class Harness:
             redisscope_binary=analyzer,
             timeout_seconds=settings.analysis.timeout_seconds,
             console_log_name=settings.analysis.console_log_name,
+            live_log_name=settings.analysis.live_log_name,
+            live_log_poll_seconds=settings.analysis.live_log_poll_seconds,
         )
         self.selector = InteractiveClusterSelector(
             YamlInventoryRepository(deployment), ChoicePrompt(self.console)

@@ -56,6 +56,8 @@ def _runner(app_settings: AppSettings, analyzer: Path, timeout: int = 60) -> Red
         redisscope_binary=analyzer,
         timeout_seconds=timeout,
         console_log_name=app_settings.analysis.console_log_name,
+        live_log_name=app_settings.analysis.live_log_name,
+        live_log_poll_seconds=app_settings.analysis.live_log_poll_seconds,
     )
     return RedisScopeRunner(
         AnalysisRepository(app_settings.storage), settings, app_settings.storage
@@ -132,6 +134,8 @@ def test_the_analyzer_output_reaches_the_caller(
             redisscope_binary=analyzer,
             timeout_seconds=60,
             console_log_name=app_settings.analysis.console_log_name,
+            live_log_name=app_settings.analysis.live_log_name,
+            live_log_poll_seconds=app_settings.analysis.live_log_poll_seconds,
         ),
         app_settings.storage,
         on_line=lambda text, _: lines.append(text),
@@ -152,6 +156,8 @@ def test_the_output_arrives_while_the_analyzer_still_runs(
             redisscope_binary=_script(tmp_path, "talkative", _TALKATIVE_ANALYZER),
             timeout_seconds=60,
             console_log_name=app_settings.analysis.console_log_name,
+            live_log_name=app_settings.analysis.live_log_name,
+            live_log_poll_seconds=app_settings.analysis.live_log_poll_seconds,
         ),
         app_settings.storage,
         on_line=lambda _, __: arrived.append(time.monotonic()),
@@ -173,6 +179,8 @@ def test_an_analyzer_that_never_finishes_times_out(
             redisscope_binary=_script(tmp_path, "stuck", _STUCK_ANALYZER),
             timeout_seconds=1,
             console_log_name=app_settings.analysis.console_log_name,
+            live_log_name=app_settings.analysis.live_log_name,
+            live_log_poll_seconds=app_settings.analysis.live_log_poll_seconds,
         ),
         app_settings.storage,
     )
@@ -205,6 +213,8 @@ def test_a_progress_line_arrives_as_it_is_rewritten(
             redisscope_binary=_script(tmp_path, "progress", _PROGRESS_ANALYZER),
             timeout_seconds=60,
             console_log_name=app_settings.analysis.console_log_name,
+            live_log_name=app_settings.analysis.live_log_name,
+            live_log_poll_seconds=app_settings.analysis.live_log_poll_seconds,
         ),
         app_settings.storage,
         on_line=lambda text, overwrite: updates.append((text, overwrite)),
@@ -217,7 +227,7 @@ def test_a_progress_line_arrives_as_it_is_rewritten(
     assert ("100% read", True) in updates
 
 
-def test_the_colour_codes_never_reach_the_log(
+def test_the_colours_of_the_analyzer_are_kept(
     app_settings: AppSettings, package: StoredPackage, tmp_path: Path
 ) -> None:
     lines: list[str] = []
@@ -227,6 +237,8 @@ def test_the_colour_codes_never_reach_the_log(
             redisscope_binary=_script(tmp_path, "coloured", _PROGRESS_ANALYZER),
             timeout_seconds=60,
             console_log_name=app_settings.analysis.console_log_name,
+            live_log_name=app_settings.analysis.live_log_name,
+            live_log_poll_seconds=app_settings.analysis.live_log_poll_seconds,
         ),
         app_settings.storage,
         on_line=lambda text, _: lines.append(text),
@@ -234,8 +246,8 @@ def test_the_colour_codes_never_reach_the_log(
 
     runner.analyze(package, AnalysisOptions())
 
-    assert "all done" in lines
-    assert all("\x1b" not in line for line in lines)
+    assert any("all done" in line for line in lines)
+    assert any("\x1b[32m" in line for line in lines)
 
 
 def test_the_saved_run_log_keeps_the_raw_output(
@@ -247,6 +259,8 @@ def test_the_saved_run_log_keeps_the_raw_output(
             redisscope_binary=_script(tmp_path, "raw", _PROGRESS_ANALYZER),
             timeout_seconds=60,
             console_log_name=app_settings.analysis.console_log_name,
+            live_log_name=app_settings.analysis.live_log_name,
+            live_log_poll_seconds=app_settings.analysis.live_log_poll_seconds,
         ),
         app_settings.storage,
     )

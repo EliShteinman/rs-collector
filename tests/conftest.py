@@ -59,6 +59,9 @@ def settings_document(tmp_path: Path) -> dict[str, object]:
             "redisscope_binary": "/opt/redisscope/redisscope",
             "timeout_seconds": 7200,
             "console_log_name": "analysis_console.log",
+            "keep_colours": True,
+            "live_log_name": "redisscope_current.log",
+            "live_log_poll_seconds": 0.05,
         },
         "retention": {"max_age_days": 7},
         "serve": {

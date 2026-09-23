@@ -1,6 +1,8 @@
+import os
 from datetime import UTC, datetime
 
 from rs_collector.analysis.command import RedisScopeCommandBuilder
+from rs_collector.analysis.live_log import LiveLogFollower
 from rs_collector.analysis.models import AnalysisMetadata, AnalysisStatus, StoredAnalysis
 from rs_collector.analysis.namer import AnalysisNamer
 from rs_collector.analysis.options import AnalysisOptions
@@ -17,6 +19,7 @@ from rs_collector.processes.runner import LineReader, ProcessRunner, SubprocessR
 from rs_collector.settings.models import AnalysisSettings, StorageSettings
 
 _SUCCESS_STATUS = 0
+_FORCE_COLOUR = "FORCE_COLOR"
 
 
 class RedisScopeRunner:
@@ -69,13 +72,30 @@ class RedisScopeRunner:
         )
 
     def _execute(self, started: StoredAnalysis) -> int:
+        if self._on_line is None:
+            return self._run(started)
+        with LiveLogFollower(
+            started.directory / self._settings.live_log_name,
+            self._on_line,
+            self._settings.live_log_poll_seconds,
+        ):
+            return self._run(started)
+
+    def _run(self, started: StoredAnalysis) -> int:
         return self._processes.run(
             command=started.metadata.command,
             cwd=started.directory,
             log_path=started.directory / self._settings.console_log_name,
             timeout_seconds=self._settings.timeout_seconds,
             on_line=self._on_line,
+            environment=self._environment(),
         )
+
+    def _environment(self) -> dict[str, str]:
+        environment = dict(os.environ)
+        if self._settings.keep_colours:
+            environment[_FORCE_COLOUR] = "1"
+        return environment
 
     def _conclude(self, started: StoredAnalysis, exit_status: int) -> StoredAnalysis:
         status = (

@@ -1,6 +1,7 @@
 import pytest
 
 from rs_collector.web.files.log_lines import LogReader, level_of
+from rs_collector.web.views.log_html import as_html
 
 pytestmark = pytest.mark.unit
 
@@ -77,8 +78,20 @@ def test_a_progress_line_shows_only_what_the_terminal_would_show() -> None:
     assert [line.text for line in content.lines] == ["reading 100%", "done"]
 
 
-def test_the_colour_codes_are_dropped() -> None:
+def test_the_colours_are_kept_and_the_level_still_read() -> None:
     content = LogReader(max_lines=10).parse(b"\x1b[31mERROR broken\x1b[0m\n")
 
-    assert content.lines[0].text == "ERROR broken"
+    assert content.lines[0].text == "\x1b[31mERROR broken\x1b[0m"
     assert content.lines[0].level == "error"
+
+
+def test_a_coloured_line_becomes_coloured_markup() -> None:
+    markup = str(as_html("\x1b[31mERROR broken\x1b[0m"))
+
+    assert markup == '<span class="c-red">ERROR broken</span>'
+
+
+def test_markup_from_a_log_line_is_escaped() -> None:
+    markup = str(as_html("<script>alert(1)</script>"))
+
+    assert "&lt;script&gt;" in markup

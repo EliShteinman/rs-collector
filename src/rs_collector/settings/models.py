@@ -25,6 +25,9 @@ class AnalysisSettings(BaseModel):
     redisscope_binary: Path = Field(description="RedisScope command name or path")
     timeout_seconds: int = Field(gt=0)
     console_log_name: str = Field(description="File the analyzer output is written to")
+    keep_colours: bool = Field(default=True, description="Ask RedisScope for its colours")
+    live_log_name: str = Field(description="The log RedisScope writes for real-time monitoring")
+    live_log_poll_seconds: float = Field(gt=0)
 
 
 class RetentionSettings(BaseModel):
