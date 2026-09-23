@@ -23,6 +23,7 @@ from rs_collector.exceptions.configuration import (
     MissingCredentialsError,
     MissingSettingError,
 )
+from rs_collector.exceptions.jobs import JobError, JobNotFoundError
 from rs_collector.exceptions.privileges import PrivilegeError, RunningAsRootError
 from rs_collector.exceptions.processes import (
     ProcessError,
@@ -81,6 +82,8 @@ __all__ = [
     "EmptyInventoryError",
     "FileTransferError",
     "HostKeyMismatchError",
+    "JobError",
+    "JobNotFoundError",
     "MetadataError",
     "MissingCredentialsError",
     "MissingSettingError",
