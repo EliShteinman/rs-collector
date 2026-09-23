@@ -170,3 +170,14 @@ class FakeProcessSignals:
         self.terminated.append(pid)
         if self._dies_on_terminate:
             self.alive.discard(pid)
+
+
+def cluster_replies(remote_path: str, size: int, digest: str) -> dict[str, str]:
+    return {
+        "id -u": "0\n{marker}:0\n",
+        "debug_info": f"File {remote_path} is saved.\n{{marker}}:0\n",
+        "stat -c": f"{size}\n{{marker}}:0\n",
+        "sha256sum": f"{digest}  {remote_path}\n{{marker}}:0\n",
+        "chmod": "{marker}:0\n",
+        "rm -f": "{marker}:0\n",
+    }

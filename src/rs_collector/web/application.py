@@ -1,5 +1,6 @@
 from rs_collector.exceptions.base import RsCollectorError
 from rs_collector.exceptions.jobs import JobNotFoundError
+from rs_collector.exceptions.selection import ClusterNotFoundError
 from rs_collector.exceptions.storage import ArtifactNotFoundError, PackageNotFoundError
 from rs_collector.exceptions.web import BadRequestError, RouteNotFoundError
 from rs_collector.jobs.registry import JobRegistry
@@ -15,7 +16,13 @@ from rs_collector.web.views import failure
 
 _GET = "GET"
 _POST = "POST"
-_NOT_FOUND = (RouteNotFoundError, JobNotFoundError, ArtifactNotFoundError, PackageNotFoundError)
+_NOT_FOUND = (
+    RouteNotFoundError,
+    JobNotFoundError,
+    ArtifactNotFoundError,
+    PackageNotFoundError,
+    ClusterNotFoundError,
+)
 _NOT_FOUND_STATUS = 404
 _BAD_REQUEST_STATUS = 400
 _FAILED_STATUS = 500
