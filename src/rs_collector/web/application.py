@@ -32,6 +32,7 @@ _NOT_FOUND = (
 _NOT_FOUND_STATUS = 404
 _BAD_REQUEST_STATUS = 400
 _FAILED_STATUS = 500
+_UNEXPECTED = "The server hit an unexpected error. The details are in the rsc log."
 
 
 class WebApplication:
@@ -50,6 +51,12 @@ class WebApplication:
             return self._failure(request, _BAD_REQUEST_STATUS, "Bad request", error)
         except RsCollectorError as error:
             return self._failure(request, _FAILED_STATUS, "Something went wrong", error)
+        except Exception:
+            self._logger.exception("%s %s crashed", request.method, request.path)
+            return Response.html(
+                failure.render(request.url, "Something went wrong", _UNEXPECTED),
+                status=_FAILED_STATUS,
+            )
 
     def _routes(self) -> Router:
         pages = PagesController(self._container, self._jobs)

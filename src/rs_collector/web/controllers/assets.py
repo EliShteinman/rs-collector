@@ -1,20 +1,24 @@
 from collections.abc import Mapping
-from importlib import resources
+from pathlib import Path
 
 from rs_collector.exceptions.storage import ArtifactNotFoundError
+from rs_collector.runtime.bundle import BundleLocator
 from rs_collector.web import assets
 from rs_collector.web.http import Request, Response
 
 _CSS = "text/css; charset=utf-8"
 _JAVASCRIPT = "text/javascript; charset=utf-8"
 _FONT = "font/woff2"
-_FONT_PACKAGE = "rs_collector.web.fonts"
 _FONTS = ("plex-sans.woff2", "plex-mono.woff2")
+_FONT_DIRECTORY = ("web", "fonts")
 _ENCODING = "utf-8"
 _IMMUTABLE = {"Cache-Control": "public, max-age=604800, immutable"}
 
 
 class AssetsController:
+    def __init__(self, fonts: Path | None = None) -> None:
+        self._fonts = fonts or BundleLocator().bundled(*_FONT_DIRECTORY)
+
     def stylesheet(self, _: Request, __: Mapping[str, str]) -> Response:
         return Response.file(assets.CSS.encode(_ENCODING), _CSS)
 
@@ -23,7 +27,7 @@ class AssetsController:
 
     def font(self, _: Request, parameters: Mapping[str, str]) -> Response:
         name = parameters["name"]
-        if name not in _FONTS:
+        path = self._fonts / name
+        if name not in _FONTS or not path.is_file():
             raise ArtifactNotFoundError(f"No font named '{name}' is bundled")
-        content = resources.files(_FONT_PACKAGE).joinpath(name).read_bytes()
-        return Response(body=content, content_type=_FONT, headers=_IMMUTABLE)
+        return Response(body=path.read_bytes(), content_type=_FONT, headers=_IMMUTABLE)

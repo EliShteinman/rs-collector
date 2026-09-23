@@ -1,6 +1,7 @@
 import time
 
 import pytest
+from pytest_mock import MockerFixture
 
 from rs_collector.cli.container import Container
 from rs_collector.jobs.models import JobStatus
@@ -157,3 +158,17 @@ def test_the_bundled_font_is_served(application: WebApplication) -> None:
 
 def test_an_unknown_font_is_refused(application: WebApplication) -> None:
     assert _get(application, "/static/fonts/../../etc/passwd").status == 404
+
+
+def test_an_unexpected_error_still_answers_the_browser(
+    application: WebApplication, mocker: MockerFixture
+) -> None:
+    mocker.patch(
+        "rs_collector.status.service.StatusService.collect",
+        side_effect=RuntimeError("something nobody expected"),
+    )
+
+    response = _get(application, "/")
+
+    assert response.status == 500
+    assert "unexpected error" in response.body.decode()

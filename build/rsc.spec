@@ -8,7 +8,7 @@ analysis = Analysis(
     [str(PROJECT_ROOT / "build" / "entrypoint.py")],
     pathex=[str(PROJECT_ROOT / "src")],
     binaries=[],
-    datas=[(str(PROJECT_ROOT / "src" / "rs_collector" / "web" / "fonts"), "rs_collector/web/fonts")],
+    datas=[(str(PROJECT_ROOT / "src" / "rs_collector" / "web" / "fonts"), "web/fonts")],
     hiddenimports=[
         "rs_collector.cli.app",
         "logging.handlers",

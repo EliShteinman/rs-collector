@@ -15,5 +15,10 @@ class BundleLocator:
             return Path(self._executable).resolve().parent
         return self._module_file.resolve().parents[_PACKAGE_ROOT_DEPTH]
 
+    def bundled(self, *parts: str) -> Path:
+        extracted = getattr(sys, _BUNDLE_ATTRIBUTE, None)
+        base = Path(extracted) if extracted is not None else self._module_file.resolve().parents[1]
+        return base.joinpath(*parts)
+
     def is_frozen(self) -> bool:
         return hasattr(sys, _BUNDLE_ATTRIBUTE)
