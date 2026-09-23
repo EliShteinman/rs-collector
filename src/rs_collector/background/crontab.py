@@ -52,6 +52,9 @@ class CrontabInstaller:
         self._client.write(self._joined((*kept, *lines)))
         self._logger.info("Installed %d crontab lines", len(lines))
 
+    def installed(self) -> bool:
+        return any(self._is_ours(line) for line in self._client.read().splitlines())
+
     def remove(self) -> bool:
         current = self._client.read()
         kept = self._foreign_lines(current)
