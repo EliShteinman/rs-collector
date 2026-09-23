@@ -61,7 +61,12 @@ def settings_document(tmp_path: Path) -> dict[str, object]:
             "console_log_name": "analysis_console.log",
         },
         "retention": {"max_age_days": 7},
-        "serve": {"host": "0.0.0.0", "port": 3923, "base_path": ""},
+        "serve": {
+            "host": "0.0.0.0",
+            "port": 3923,
+            "base_path": "",
+            "max_inline_bytes": 5_242_880,
+        },
         "background": {
             "pid_file_name": "serve.pid",
             "console_log_name": "serve_console.log",

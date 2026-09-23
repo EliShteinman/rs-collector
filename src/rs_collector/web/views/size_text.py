@@ -6,6 +6,6 @@ def size(byte_count: int | float) -> str:
     amount = float(byte_count)
     for unit in _UNITS[:-1]:
         if amount < _KILO:
-            return f"{amount:.0f} {unit}" if unit in ("B", "KB") else f"{amount:.1f} {unit}"
+            return f"{amount:.0f} {unit}" if unit == "B" else f"{amount:.1f} {unit}"
         amount /= _KILO
     return f"{amount:.1f} {_UNITS[-1]}"

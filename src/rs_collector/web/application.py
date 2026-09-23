@@ -15,6 +15,7 @@ from rs_collector.web.controllers.files import FilesController
 from rs_collector.web.controllers.jobs import JobsController
 from rs_collector.web.controllers.pages import PagesController
 from rs_collector.web.controllers.retention import RetentionController
+from rs_collector.web.files.reader import FileReader
 from rs_collector.web.http import Request, Response
 from rs_collector.web.router import Router
 from rs_collector.web.views import failure
@@ -61,7 +62,10 @@ class WebApplication:
     def _routes(self) -> Router:
         pages = PagesController(self._container, self._jobs)
         jobs = JobsController(self._container, self._jobs)
-        files = FilesController(self._container.settings.storage.analyses_dir)
+        files = FilesController(
+            self._container.settings.storage.analyses_dir,
+            FileReader(self._container.settings.serve.max_inline_bytes),
+        )
         assets = AssetsController()
         retention = RetentionController(self._container)
         router = Router()

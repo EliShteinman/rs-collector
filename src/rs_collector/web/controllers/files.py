@@ -1,20 +1,23 @@
-import mimetypes
 from collections.abc import Mapping
+from datetime import UTC, datetime
 from pathlib import Path
 
 from rs_collector.exceptions.storage import ArtifactNotFoundError
 from rs_collector.logging_setup.configurator import LoggerFactory
+from rs_collector.web.files import media
+from rs_collector.web.files.reader import FileReader
 from rs_collector.web.http import Request, Response
 from rs_collector.web.views import listing
 
-_DEFAULT_TYPE = "application/octet-stream"
 _ANALYSES_PATH = "/analyses/"
-_INDEX_FILES = ("index.html",)
+_RAW_FLAG = "raw"
+_TRUTHY = ("1", "yes", "true")
 
 
 class FilesController:
-    def __init__(self, root: Path, heading: str = "Analyses") -> None:
+    def __init__(self, root: Path, reader: FileReader, heading: str = "Analyses") -> None:
         self._root = root
+        self._reader = reader
         self._heading = heading
         self._logger = LoggerFactory.for_component("web.files")
 
@@ -24,7 +27,8 @@ class FilesController:
         if target.is_dir():
             return self._directory(request, target, relative)
         if target.is_file():
-            return Response.file(target.read_bytes(), _content_type(target))
+            body, content_type = self._reader.read(target, raw=_wants_raw(request))
+            return Response.file(body, content_type)
         raise ArtifactNotFoundError(f"{_ANALYSES_PATH}{relative} does not exist")
 
     def _resolved(self, relative: str) -> Path:
@@ -36,25 +40,23 @@ class FilesController:
         return target
 
     def _directory(self, request: Request, target: Path, relative: str) -> Response:
-        index = self._index_of(target)
-        if index is not None:
-            return Response.file(index.read_bytes(), _content_type(index))
-        entries = [
-            listing.Entry(
-                name=f"{child.name}/" if child.is_dir() else child.name,
-                url=f"{_ANALYSES_PATH}{_joined(relative, child.name)}",
-            )
-            for child in sorted(target.iterdir(), key=lambda item: (item.is_file(), item.name))
-        ]
+        entries = [self._entry(child, relative) for child in _sorted(target)]
         heading = relative or self._heading
         return Response.html(listing.render(request.url, heading, entries, self._parent(relative)))
 
-    def _index_of(self, target: Path) -> Path | None:
-        for name in _INDEX_FILES:
-            candidate = target / name
-            if candidate.is_file():
-                return candidate
-        return None
+    def _entry(self, child: Path, relative: str) -> listing.Entry:
+        info = child.stat()
+        return listing.Entry(
+            name=f"{child.name}/" if child.is_dir() else child.name,
+            url=f"{_ANALYSES_PATH}{_joined(relative, child.name)}",
+            size_bytes=None if child.is_dir() else info.st_size,
+            changed_at=datetime.fromtimestamp(info.st_mtime, tz=UTC),
+            raw_url=(
+                f"{_ANALYSES_PATH}{_joined(relative, child.name)}?raw=1"
+                if child.is_file() and media.is_readable_text(child)
+                else ""
+            ),
+        )
 
     def _parent(self, relative: str) -> str | None:
         if not relative:
@@ -63,10 +65,13 @@ class FilesController:
         return f"{_ANALYSES_PATH}{parent}"
 
 
+def _sorted(target: Path) -> list[Path]:
+    return sorted(target.iterdir(), key=lambda item: (item.is_file(), item.name.lower()))
+
+
 def _joined(relative: str, name: str) -> str:
     return f"{relative}/{name}" if relative else name
 
 
-def _content_type(target: Path) -> str:
-    guessed, _ = mimetypes.guess_type(target.name)
-    return guessed or _DEFAULT_TYPE
+def _wants_raw(request: Request) -> bool:
+    return request.query.get(_RAW_FLAG, "").lower() in _TRUTHY

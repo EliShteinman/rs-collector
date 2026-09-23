@@ -1,6 +1,7 @@
 from collections.abc import Callable, Mapping, Sequence
 
 from markupsafe import Markup
+from pydantic import BaseModel, ConfigDict, Field
 
 from rs_collector.analysis.models import StoredAnalysis
 from rs_collector.analysis.options import AnalysisDepth
@@ -14,6 +15,15 @@ from rs_collector.web.views.size_text import size
 from rs_collector.web.views.time_text import ago, stamp
 
 _TIGHT_DISK = 0.9
+
+
+class AnalysisLinks(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    files: str
+    report: str = Field(default="")
+    raw_logs: str = Field(default="")
+
 
 _CONTENT = template("""
 <section class="state">
@@ -195,11 +205,13 @@ _CONTENT = template("""
         </td>
         <td>{% if analysis.metadata.pinned %}<span class="tag kept">kept</span>{% endif %}</td>
         <td class="actions">
-          {% if reports.get(analysis.name) %}
-          <a class="report" href="{{ url(reports[analysis.name]) }}">Open report</a>
-          {% else %}
-          <a href="{{ url('/analyses/' + analysis.name + '/') }}">Browse files</a>
+          {% if links[analysis.name].report %}
+          <a class="report" href="{{ url(links[analysis.name].report) }}">Report</a>
           {% endif %}
+          {% if links[analysis.name].raw_logs %}
+          <a href="{{ url(links[analysis.name].raw_logs) }}">Raw logs</a>
+          {% endif %}
+          <a href="{{ url(links[analysis.name].files) }}">All files</a>
           {{ keep_button(analysis.name, analysis.metadata.pinned) }}
         </td>
       </tr>
@@ -259,7 +271,7 @@ def render(
     clusters: Sequence[Cluster],
     packages: Sequence[StoredPackage],
     analyses: Sequence[StoredAnalysis],
-    reports: Mapping[str, str],
+    links: Mapping[str, AnalysisLinks],
     jobs: Sequence[JobView],
 ) -> str:
     content = _CONTENT.render(
@@ -268,7 +280,7 @@ def render(
         clusters=clusters,
         packages=packages,
         analyses=analyses,
-        reports=reports,
+        links=links,
         jobs=jobs,
         depths=list(AnalysisDepth),
         depth_labels=_DEPTH_LABELS,

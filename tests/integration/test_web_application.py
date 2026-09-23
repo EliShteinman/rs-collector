@@ -1,4 +1,6 @@
+import gzip
 import time
+from pathlib import Path
 
 import pytest
 from pytest_mock import MockerFixture
@@ -172,3 +174,93 @@ def test_an_unexpected_error_still_answers_the_browser(
 
     assert response.status == 500
     assert "unexpected error" in response.body.decode()
+
+
+def _analysis_directory(container: Container, name: str = "demo__default") -> Path:
+    directory = container.settings.storage.analyses_dir / name
+    directory.mkdir(parents=True, exist_ok=True)
+    return directory
+
+
+def test_the_raw_logs_of_a_package_can_be_browsed(
+    application: WebApplication, container: Container
+) -> None:
+    logs = _analysis_directory(container) / "redisscope_sp" / "node1"
+    logs.mkdir(parents=True)
+    (logs / "redis-server.log").write_text("started\n", encoding="utf-8")
+
+    body = _get(application, "/analyses/demo__default/redisscope_sp/node1").body.decode()
+
+    assert "redis-server.log" in body
+
+
+def test_a_raw_log_is_shown_in_the_browser(
+    application: WebApplication, container: Container
+) -> None:
+    logs = _analysis_directory(container) / "redisscope_sp"
+    logs.mkdir(parents=True)
+    (logs / "redis-server.log").write_text("the last line\n", encoding="utf-8")
+
+    response = _get(application, "/analyses/demo__default/redisscope_sp/redis-server.log")
+
+    assert response.content_type.startswith("text/plain")
+    assert b"the last line" in response.body
+
+
+def test_a_rotated_log_is_unpacked_for_the_browser(
+    application: WebApplication, container: Container
+) -> None:
+    logs = _analysis_directory(container) / "redisscope_sp"
+    logs.mkdir(parents=True)
+    (logs / "redis-server.log.1.gz").write_bytes(gzip.compress(b"an older line\n"))
+
+    response = _get(application, "/analyses/demo__default/redisscope_sp/redis-server.log.1.gz")
+
+    assert response.content_type.startswith("text/plain")
+    assert b"an older line" in response.body
+
+
+def test_the_listing_shows_sizes_and_dates(
+    application: WebApplication, container: Container
+) -> None:
+    directory = _analysis_directory(container)
+    (directory / "redisscope_attributes.txt").write_bytes(b"x" * 4036)
+
+    body = _get(application, "/analyses/demo__default").body.decode()
+
+    assert "3.9 KB" in body
+
+
+def test_the_console_links_to_the_report_the_analyzer_wrote(
+    application: WebApplication, container: Container, package: str
+) -> None:
+    job_url = _post(application, "/analyze", f"package={package}&depth=default").headers["Location"]
+    _wait_for_job(application, job_url)
+    directory = container.analyses().list()[0].directory
+    (directory / "redisscope_html").mkdir(exist_ok=True)
+    (directory / "redisscope_html" / "index.html").write_text("<html></html>", encoding="utf-8")
+
+    body = _get(application, "/").body.decode()
+
+    assert "redisscope_html/index.html" in body
+
+
+def test_the_console_links_to_the_raw_logs(
+    application: WebApplication, container: Container, package: str
+) -> None:
+    job_url = _post(application, "/analyze", f"package={package}&depth=default").headers["Location"]
+    _wait_for_job(application, job_url)
+    (container.analyses().list()[0].directory / "redisscope_sp").mkdir(exist_ok=True)
+
+    body = _get(application, "/").body.decode()
+
+    assert "Raw logs" in body and "redisscope_sp" in body
+
+
+def test_every_analysis_can_be_browsed_even_without_a_report(
+    application: WebApplication, package: str
+) -> None:
+    job_url = _post(application, "/analyze", f"package={package}&depth=default").headers["Location"]
+    _wait_for_job(application, job_url)
+
+    assert "All files" in _get(application, "/").body.decode()

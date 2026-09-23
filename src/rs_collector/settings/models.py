@@ -41,6 +41,7 @@ class ServeSettings(BaseModel):
     base_path: str = Field(
         default="", description="Path prefix when a reverse proxy serves rsc under a subpath"
     )
+    max_inline_bytes: int = Field(gt=0, description="How much of a log file the browser shows")
 
 
 class BackgroundSettings(BaseModel):
