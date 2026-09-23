@@ -1,4 +1,4 @@
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from pathlib import Path
 
 from rs_collector.exceptions.remote import SshConnectionError
@@ -113,7 +113,14 @@ class FakeProcessRunner:
         self.error = error
         self.calls: list[tuple[tuple[str, ...], Path, Path, int]] = []
 
-    def run(self, command: Iterable[str], cwd: Path, log_path: Path, timeout_seconds: int) -> int:
+    def run(
+        self,
+        command: Iterable[str],
+        cwd: Path,
+        log_path: Path,
+        timeout_seconds: int,
+        on_line: Callable[[str], None] | None = None,
+    ) -> int:
         self.calls.append((tuple(command), cwd, log_path, timeout_seconds))
         if self.error is not None:
             raise self.error

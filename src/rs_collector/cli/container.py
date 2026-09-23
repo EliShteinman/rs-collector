@@ -112,7 +112,12 @@ class Container:
 
     def analyze_workflow(self) -> AnalyzeWorkflow:
         return AnalyzeWorkflow(
-            RedisScopeRunner(self.analyses(), self._settings.analysis, self._settings.storage),
+            RedisScopeRunner(
+                self.analyses(),
+                self._settings.analysis,
+                self._settings.storage,
+                on_line=self._console.write,
+            ),
             self._console,
         )
 

@@ -1,12 +1,14 @@
+import time
 from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
+from rs_collector.analysis.models import AnalysisStatus
 from rs_collector.analysis.options import AnalysisDepth, AnalysisOptions
 from rs_collector.analysis.repository import AnalysisRepository
 from rs_collector.analysis.runner import RedisScopeRunner
-from rs_collector.exceptions.analysis import AnalysisFailedError
+from rs_collector.exceptions.analysis import AnalysisFailedError, AnalysisTimeoutError
 from rs_collector.packages.models import PackageMetadata, StoredPackage
 from rs_collector.settings.models import AnalysisSettings, AppSettings
 
@@ -99,3 +101,85 @@ def test_the_metadata_survives_a_failed_run(
         _runner(app_settings, analyzer).analyze(package, AnalysisOptions())
 
     assert AnalysisRepository(app_settings.storage).list()[0].metadata.exit_status == 3
+
+
+_TALKATIVE_ANALYZER = """#!/bin/sh
+echo "starting"
+sleep 0.4
+echo "finished"
+mkdir -p redisscope_html
+"""
+
+_STUCK_ANALYZER = """#!/bin/sh
+sleep 30
+"""
+
+
+def _script(tmp_path: Path, name: str, body: str) -> Path:
+    path = tmp_path / name
+    path.write_text(body, encoding="utf-8")
+    path.chmod(0o755)
+    return path
+
+
+def test_the_analyzer_output_reaches_the_caller(
+    app_settings: AppSettings, package: StoredPackage, analyzer: Path
+) -> None:
+    lines: list[str] = []
+    runner = RedisScopeRunner(
+        AnalysisRepository(app_settings.storage),
+        AnalysisSettings(
+            redisscope_binary=analyzer,
+            timeout_seconds=60,
+            console_log_name=app_settings.analysis.console_log_name,
+        ),
+        app_settings.storage,
+        on_line=lines.append,
+    )
+
+    runner.analyze(package, AnalysisOptions())
+
+    assert any(line.startswith("args:") for line in lines)
+
+
+def test_the_output_arrives_while_the_analyzer_still_runs(
+    app_settings: AppSettings, package: StoredPackage, tmp_path: Path
+) -> None:
+    arrived: list[float] = []
+    runner = RedisScopeRunner(
+        AnalysisRepository(app_settings.storage),
+        AnalysisSettings(
+            redisscope_binary=_script(tmp_path, "talkative", _TALKATIVE_ANALYZER),
+            timeout_seconds=60,
+            console_log_name=app_settings.analysis.console_log_name,
+        ),
+        app_settings.storage,
+        on_line=lambda _: arrived.append(time.monotonic()),
+    )
+
+    started = time.monotonic()
+    runner.analyze(package, AnalysisOptions())
+    finished = time.monotonic()
+
+    assert arrived[0] - started < (finished - started) / 2
+
+
+def test_an_analyzer_that_never_finishes_times_out(
+    app_settings: AppSettings, package: StoredPackage, tmp_path: Path
+) -> None:
+    runner = RedisScopeRunner(
+        AnalysisRepository(app_settings.storage),
+        AnalysisSettings(
+            redisscope_binary=_script(tmp_path, "stuck", _STUCK_ANALYZER),
+            timeout_seconds=1,
+            console_log_name=app_settings.analysis.console_log_name,
+        ),
+        app_settings.storage,
+    )
+
+    with pytest.raises(AnalysisTimeoutError):
+        runner.analyze(package, AnalysisOptions())
+
+    assert AnalysisRepository(app_settings.storage).list()[0].metadata.status is (
+        AnalysisStatus.TIMED_OUT
+    )

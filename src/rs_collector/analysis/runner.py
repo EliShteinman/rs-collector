@@ -13,7 +13,7 @@ from rs_collector.exceptions.analysis import (
 from rs_collector.exceptions.processes import ProcessStartError, ProcessTimeoutError
 from rs_collector.logging_setup.configurator import LoggerFactory
 from rs_collector.packages.models import StoredPackage
-from rs_collector.processes.runner import ProcessRunner, SubprocessRunner
+from rs_collector.processes.runner import LineReader, ProcessRunner, SubprocessRunner
 from rs_collector.settings.models import AnalysisSettings, StorageSettings
 
 _SUCCESS_STATUS = 0
@@ -27,12 +27,14 @@ class RedisScopeRunner:
         storage: StorageSettings,
         processes: ProcessRunner | None = None,
         namer: AnalysisNamer | None = None,
+        on_line: LineReader | None = None,
     ) -> None:
         self._repository = repository
         self._settings = settings
         self._storage = storage
         self._processes = processes or SubprocessRunner()
         self._namer = namer or AnalysisNamer()
+        self._on_line = on_line
         self._builder = RedisScopeCommandBuilder(settings.redisscope_binary)
         self._logger = LoggerFactory.for_component("analysis.runner")
 
@@ -72,6 +74,7 @@ class RedisScopeRunner:
             cwd=started.directory,
             log_path=started.directory / self._settings.console_log_name,
             timeout_seconds=self._settings.timeout_seconds,
+            on_line=self._on_line,
         )
 
     def _conclude(self, started: StoredAnalysis, exit_status: int) -> StoredAnalysis:
