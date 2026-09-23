@@ -60,17 +60,50 @@ diff <new>/config/settings.yml config/settings.yml    # copy over any new settin
 
 ## Use
 
+Open `http://<server>:3923/` and everything happens there:
+
+- pick a cluster and collect a new support package
+- pick a stored package and analyze it, choosing depth, a single database and masking
+- watch the log of a running collection or analysis as it happens
+- open the finished reports
+
+The same actions are available on the command line:
+
 ```bash
 ./rsc collect                           # environment -> cluster -> collect -> optional analysis
 ./rsc collect --conn-string redis://db.cluster1.example.com:12000
 ./rsc analyze                           # pick a stored package, pick options, analyze
 ./rsc list                              # stored packages and analyses
 ./rsc pin <name> / ./rsc unpin <name>   # keep an item beyond the retention period
-./rsc start / ./rsc stop                # the display server in the background
+./rsc start / ./rsc stop                # the web interface in the background
+./rsc serve                             # the web interface in the foreground
 ```
 
-The analyses are published at `http://<server>:3923/analyses/` (the port is in
-`settings.yml`).
+## Behind a reverse proxy
+
+rsc speaks plain HTTP on one port and needs no websockets, so it sits behind NGINX
+unchanged. To publish it on port 80 or 443:
+
+```nginx
+location / {
+    proxy_pass http://127.0.0.1:3923;
+    proxy_set_header Host $host;
+    proxy_read_timeout 300s;
+}
+```
+
+To publish it under a subpath, tell rsc the prefix. Either set `serve.base_path: "/rsc"` in
+`settings.yml`, or let NGINX send it:
+
+```nginx
+location /rsc/ {
+    proxy_pass http://127.0.0.1:3923/;
+    proxy_set_header X-Forwarded-Prefix /rsc;
+}
+```
+
+Collecting a package needs SSH (port 22) from this server to the cluster nodes, which is
+outgoing traffic and unrelated to the proxy.
 
 ## Development
 
