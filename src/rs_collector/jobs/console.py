@@ -9,5 +9,8 @@ class JobConsole:
     def write(self, message: str) -> None:
         self._job.write(message)
 
+    def write_over(self, message: str) -> None:
+        self._job.write_over(message)
+
     def read(self, prompt: str) -> str:
         raise JobError(f"A background job cannot answer a prompt: {prompt!r}")

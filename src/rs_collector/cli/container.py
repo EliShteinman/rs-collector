@@ -57,6 +57,12 @@ class Container:
     def configure_logging(self) -> None:
         LoggingConfigurator(self._paths).configure(self.log_dir)
 
+    def _console_line(self, text: str, overwrite: bool) -> None:
+        if overwrite:
+            self._console.write_over(text)
+            return
+        self._console.write(text)
+
     def with_console(self, console: ConsoleIo) -> Container:
         return Container(paths=self._paths, console=console)
 

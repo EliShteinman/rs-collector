@@ -134,7 +134,7 @@ def test_the_analyzer_output_reaches_the_caller(
             console_log_name=app_settings.analysis.console_log_name,
         ),
         app_settings.storage,
-        on_line=lines.append,
+        on_line=lambda text, _: lines.append(text),
     )
 
     runner.analyze(package, AnalysisOptions())
@@ -154,7 +154,7 @@ def test_the_output_arrives_while_the_analyzer_still_runs(
             console_log_name=app_settings.analysis.console_log_name,
         ),
         app_settings.storage,
-        on_line=lambda _: arrived.append(time.monotonic()),
+        on_line=lambda _, __: arrived.append(time.monotonic()),
     )
 
     started = time.monotonic()
@@ -183,3 +183,78 @@ def test_an_analyzer_that_never_finishes_times_out(
     assert AnalysisRepository(app_settings.storage).list()[0].metadata.status is (
         AnalysisStatus.TIMED_OUT
     )
+
+
+_PROGRESS_ANALYZER = """#!/bin/sh
+printf 'reading the package'
+printf '\\r 10%% read'
+printf '\\r 60%% read'
+printf '\\r100%% read\\n'
+printf '\\033[32mall done\\033[0m\\n'
+mkdir -p redisscope_html
+"""
+
+
+def test_a_progress_line_arrives_as_it_is_rewritten(
+    app_settings: AppSettings, package: StoredPackage, tmp_path: Path
+) -> None:
+    updates: list[tuple[str, bool]] = []
+    runner = RedisScopeRunner(
+        AnalysisRepository(app_settings.storage),
+        AnalysisSettings(
+            redisscope_binary=_script(tmp_path, "progress", _PROGRESS_ANALYZER),
+            timeout_seconds=60,
+            console_log_name=app_settings.analysis.console_log_name,
+        ),
+        app_settings.storage,
+        on_line=lambda text, overwrite: updates.append((text, overwrite)),
+    )
+
+    runner.analyze(package, AnalysisOptions())
+
+    assert ("reading the package", True) in updates
+    assert (" 10% read", True) in updates
+    assert ("100% read", False) in updates
+
+
+def test_the_colour_codes_never_reach_the_log(
+    app_settings: AppSettings, package: StoredPackage, tmp_path: Path
+) -> None:
+    lines: list[str] = []
+    runner = RedisScopeRunner(
+        AnalysisRepository(app_settings.storage),
+        AnalysisSettings(
+            redisscope_binary=_script(tmp_path, "coloured", _PROGRESS_ANALYZER),
+            timeout_seconds=60,
+            console_log_name=app_settings.analysis.console_log_name,
+        ),
+        app_settings.storage,
+        on_line=lambda text, _: lines.append(text),
+    )
+
+    runner.analyze(package, AnalysisOptions())
+
+    assert "all done" in lines
+    assert all("\x1b" not in line for line in lines)
+
+
+def test_the_saved_run_log_keeps_the_raw_output(
+    app_settings: AppSettings, package: StoredPackage, tmp_path: Path
+) -> None:
+    runner = RedisScopeRunner(
+        AnalysisRepository(app_settings.storage),
+        AnalysisSettings(
+            redisscope_binary=_script(tmp_path, "raw", _PROGRESS_ANALYZER),
+            timeout_seconds=60,
+            console_log_name=app_settings.analysis.console_log_name,
+        ),
+        app_settings.storage,
+    )
+
+    analysis = runner.analyze(package, AnalysisOptions())
+
+    log_path = analysis.directory / app_settings.analysis.console_log_name
+    with log_path.open(encoding="utf-8", newline="") as stream:
+        saved = stream.read()
+    assert "\r 10% read" in saved
+    assert "\x1b[32mall done" in saved

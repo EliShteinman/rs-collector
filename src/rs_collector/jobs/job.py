@@ -29,6 +29,14 @@ class Job:
             self._lines.append(line)
             self._written += 1
 
+    def write_over(self, line: str) -> None:
+        with self._lock:
+            if self._lines:
+                self._lines[-1] = line
+                return
+            self._lines.append(line)
+            self._written += 1
+
     def succeeded(self, outcome: str, report_url: str = "") -> None:
         self._finish(JobStatus.SUCCEEDED, outcome, report_url)
 

@@ -1,4 +1,6 @@
+import codecs
 import os
+import re
 import signal
 import subprocess
 import threading
@@ -8,12 +10,15 @@ from typing import Protocol
 
 from rs_collector.exceptions.processes import ProcessStartError, ProcessTimeoutError
 from rs_collector.logging_setup.configurator import LoggerFactory
+from rs_collector.terminal.escapes import plain
 
 _ENCODING = "utf-8"
-_LINE_BUFFERED = 1
+_READ_SIZE = 65536
 _NEWLINE = "\n"
+_CARRIAGE_RETURN = "\r"
+_BREAK = re.compile(r"\r\n|\n|\r")
 
-LineReader = Callable[[str], None]
+LineReader = Callable[[str, bool], None]
 
 
 class ProcessRunner(Protocol):
@@ -58,34 +63,51 @@ class SubprocessRunner:
             )
         return exit_status
 
-    def _started(self, command: Sequence[str], cwd: Path) -> subprocess.Popen[str]:
+    def _started(self, command: Sequence[str], cwd: Path) -> subprocess.Popen[bytes]:
         try:
             return subprocess.Popen(
                 list(command),
                 cwd=cwd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
-                text=True,
-                encoding=_ENCODING,
-                errors="replace",
-                bufsize=_LINE_BUFFERED,
                 start_new_session=True,
             )
         except OSError as error:
             raise ProcessStartError(f"{command[0]} cannot be executed: {error}") from error
 
-    def _terminate(self, process: subprocess.Popen[str]) -> None:
+    def _terminate(self, process: subprocess.Popen[bytes]) -> None:
         try:
             os.killpg(os.getpgid(process.pid), signal.SIGKILL)
         except (ProcessLookupError, PermissionError) as error:
             self._logger.debug("The process %d could not be killed: %s", process.pid, error)
 
     def _forward_output(
-        self, process: subprocess.Popen[str], log_path: Path, on_line: LineReader | None
+        self, process: subprocess.Popen[bytes], log_path: Path, on_line: LineReader | None
     ) -> None:
-        with log_path.open("w", encoding=_ENCODING) as log_file:
-            for line in process.stdout or ():
-                log_file.write(line)
+        output = process.stdout
+        if output is None:
+            return
+        decoder = codecs.getincrementaldecoder(_ENCODING)(errors="replace")
+        with log_path.open("w", encoding=_ENCODING, newline="") as log_file:
+            pending = ""
+            while chunk := os.read(output.fileno(), _READ_SIZE):
+                text = decoder.decode(chunk)
+                log_file.write(text)
                 log_file.flush()
-                if on_line is not None:
-                    on_line(line.rstrip(_NEWLINE))
+                pending = self._emitted(pending + text, on_line)
+            self._emit(pending, overwrite=False, on_line=on_line)
+
+    def _emitted(self, buffered: str, on_line: LineReader | None) -> str:
+        while match := _BREAK.search(buffered):
+            self._emit(
+                buffered[: match.start()],
+                overwrite=match.group() == _CARRIAGE_RETURN,
+                on_line=on_line,
+            )
+            buffered = buffered[match.end() :]
+        return buffered
+
+    def _emit(self, text: str, overwrite: bool, on_line: LineReader | None) -> None:
+        if on_line is None or not text:
+            return
+        on_line(plain(text), overwrite)
