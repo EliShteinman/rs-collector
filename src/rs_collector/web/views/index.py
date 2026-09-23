@@ -24,6 +24,7 @@ class AnalysisLinks(BaseModel):
     report: str = Field(default="")
     raw_logs: str = Field(default="")
     analyzer_log: str = Field(default="")
+    analyzer_logs: str = Field(default="")
 
 
 _CONTENT = template("""
@@ -125,6 +126,9 @@ _CONTENT = template("""
       <label class="inline">
         <input type="checkbox" name="mask" value="yes"> Hide sensitive values in the report
       </label>
+      <label class="inline">
+        <input type="checkbox" name="verbose" value="yes"> Detailed log while it runs
+      </label>
       <button type="submit">Analyze now</button>
     </form>
     {% else %}
@@ -215,6 +219,9 @@ _CONTENT = template("""
           {% if links[analysis.name].analyzer_log %}
           <a href="{{ url(links[analysis.name].analyzer_log) }}">Run log</a>
           {% endif %}
+          {% if links[analysis.name].analyzer_logs %}
+          <a href="{{ url(links[analysis.name].analyzer_logs) }}">All its logs</a>
+          {% endif %}
           <a href="{{ url(links[analysis.name].files) }}">All files</a>
           {{ keep_button(analysis.name, analysis.metadata.pinned) }}
         </td>
@@ -262,10 +269,10 @@ _KEEP_BUTTON = template("""
 """)
 
 _DEPTH_LABELS = {
-    AnalysisDepth.QUICK: "quick — skip the logs",
-    AnalysisDepth.DEFAULT: "default",
-    AnalysisDepth.FULL: "full — analyze everything",
-    AnalysisDepth.MAX: "deepest — everything and pattern counts",
+    AnalysisDepth.QUICK: "quick — skip the support package tests",
+    AnalysisDepth.DEFAULT: "default — logs of the recent time window",
+    AnalysisDepth.FULL: "full — every log file, not only the recent window",
+    AnalysisDepth.MAX: "deepest — every log file and every pattern counted per node",
 }
 
 

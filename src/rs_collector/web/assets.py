@@ -302,6 +302,14 @@ td .note { margin-top: .1rem; }
 .logline.critical { font-weight: 600; }
 .logline.warning .lt { color: var(--busy); }
 .logline.debug .lt { opacity: .7; }
+.c-red { color: var(--brand); }
+.c-green { color: var(--good); }
+.c-yellow { color: var(--busy); }
+.c-blue { color: #3b82c4; }
+.c-magenta { color: #a457c4; }
+.c-cyan { color: #2a9d9d; }
+.c-grey, .c-white, .c-black { color: var(--ink-soft); }
+.strong { font-weight: 700; }
 .logline.hidden { display: none; }
 
 body.wide { display: flex; flex-direction: column; height: 100vh; }
@@ -376,7 +384,7 @@ JAVASCRIPT = """
       .then(function (response) { return response.json(); })
       .then(function (data) {
         if (data.lines.length) {
-          log.textContent += data.lines.join('\\n') + '\\n';
+          log.insertAdjacentHTML('beforeend', data.lines.join('\\n') + '\\n');
           log.scrollTop = log.scrollHeight;
         }
         if (typeof data.next_line === 'number') {

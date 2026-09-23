@@ -14,6 +14,7 @@ from rs_collector.web.context import WebContext
 from rs_collector.web.http import Request, Response
 from rs_collector.web.requests import AnalyzeRequest, CollectRequest
 from rs_collector.web.views import job as job_view
+from rs_collector.web.views.log_html import as_html
 
 _JOBS_PATH = "/jobs/"
 _ANALYSES_PATH = "/analyses/"
@@ -47,7 +48,12 @@ class JobsController:
 
     def log(self, request: Request, parameters: Mapping[str, str]) -> Response:
         job = self._jobs.get(parameters["identifier"])
-        return Response.json(job.view(from_line=_offset(request)).model_dump_json())
+        view = job.view(from_line=_offset(request))
+        return Response.json(
+            view.model_copy(
+                update={"lines": tuple(as_html(line) for line in view.lines)}
+            ).model_dump_json()
+        )
 
     def _cluster(self, name: str) -> Cluster:
         cluster = self._container.inventory().load().cluster(name)

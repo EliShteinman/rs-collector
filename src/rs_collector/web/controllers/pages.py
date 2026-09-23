@@ -42,6 +42,7 @@ class PagesController:
             report=self._relative(analysis, report),
             raw_logs=self._relative(analysis, logs),
             analyzer_log=self._relative(analysis, outputs.analyzer_log()),
+            analyzer_logs=self._relative(analysis, outputs.analyzer_log_directory()),
         )
 
     def _relative(self, analysis: StoredAnalysis, target: object) -> str:

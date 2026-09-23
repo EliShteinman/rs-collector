@@ -25,6 +25,7 @@ class AnalyzeRequest(BaseModel):
     bdb_id: int | None = Field(default=None, gt=0)
     depth: AnalysisDepth = Field(default=AnalysisDepth.DEFAULT)
     mask: bool = Field(default=False)
+    verbose: bool = Field(default=False)
 
     @field_validator("bdb_id", mode="before")
     @classmethod
@@ -42,11 +43,14 @@ class AnalyzeRequest(BaseModel):
                 "bdb_id": form.get("bdb", ""),
                 "depth": form.get("depth", AnalysisDepth.DEFAULT.value),
                 "mask": form.get("mask", "").lower() in _AFFIRMATIVE,
+                "verbose": form.get("verbose", "").lower() in _AFFIRMATIVE,
             },
         )
 
     def options(self) -> AnalysisOptions:
-        return AnalysisOptions(bdb_id=self.bdb_id, depth=self.depth, mask=self.mask)
+        return AnalysisOptions(
+            bdb_id=self.bdb_id, depth=self.depth, mask=self.mask, verbose=self.verbose
+        )
 
 
 def _validated[T: BaseModel](model: type[T], values: dict[str, object]) -> T:

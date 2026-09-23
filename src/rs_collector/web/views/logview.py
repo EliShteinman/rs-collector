@@ -4,6 +4,7 @@ from markupsafe import Markup
 
 from rs_collector.web.files.log_lines import LogContent
 from rs_collector.web.views.layout import page, template
+from rs_collector.web.views.log_html import as_html
 from rs_collector.web.views.size_text import size
 
 _CONTENT = template("""
@@ -36,7 +37,7 @@ _CONTENT = template("""
   <div class="loglines" id="log-lines">
     {% for line in content.lines %}
     <div class="logline {{ line.level }}" data-level="{{ line.level }}">
-      <span class="ln">{{ line.number }}</span><span class="lt">{{ line.text }}</span>
+      <span class="ln">{{ line.number }}</span><span class="lt">{{ html(line.text) }}</span>
     </div>
     {% endfor %}
   </div>
@@ -63,5 +64,6 @@ def render(
         raw_url=raw_url,
         parent_url=parent_url,
         size=size,
+        html=as_html,
     )
     return page(name, Markup(markup), url, wide=True)

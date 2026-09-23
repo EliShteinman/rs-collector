@@ -2,7 +2,7 @@ import re
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from rs_collector.terminal.escapes import as_shown
+from rs_collector.terminal.escapes import as_written, plain
 
 _ENCODING = "utf-8"
 _LEVEL_WORDS = (
@@ -51,12 +51,12 @@ class LogReader:
 
     def parse(self, content: bytes) -> LogContent:
         text = content.decode(_ENCODING, errors="replace")
-        rows = [as_shown(row) for row in _rows(text)]
+        rows = [as_written(row) for row in _rows(text)]
         shown = rows[-self._max_lines :] if len(rows) > self._max_lines else rows
         first = len(rows) - len(shown) + 1
         return LogContent(
             lines=tuple(
-                LogLine(number=first + offset, level=level_of(row), text=row)
+                LogLine(number=first + offset, level=level_of(plain(row)), text=row)
                 for offset, row in enumerate(shown)
             ),
             total_lines=len(rows),

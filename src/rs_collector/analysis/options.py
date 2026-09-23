@@ -33,10 +33,11 @@ class AnalysisOptions(BaseModel):
     bdb_id: int | None = Field(default=None, gt=0)
     depth: AnalysisDepth = Field(default=AnalysisDepth.DEFAULT)
     mask: bool = Field(default=False)
+    verbose: bool = Field(default=False)
 
     @property
     def flags(self) -> tuple[str, ...]:
-        return (*self._bdb_flags(), *self.depth.flags, *self._mask_flags())
+        return (*self._bdb_flags(), *self.depth.flags, *self._mask_flags(), *self._verbose_flags())
 
     def slug(self) -> str:
         candidates = (self._bdb_slug(), self._depth_slug(), self._mask_slug())
@@ -48,6 +49,9 @@ class AnalysisOptions(BaseModel):
 
     def _mask_flags(self) -> tuple[str, ...]:
         return ("--mask",) if self.mask else ()
+
+    def _verbose_flags(self) -> tuple[str, ...]:
+        return ("--verbose",) if self.verbose else ()
 
     def _bdb_slug(self) -> str:
         return "" if self.bdb_id is None else _BDB_SLUG_TEMPLATE.format(bdb_id=self.bdb_id)

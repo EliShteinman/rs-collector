@@ -7,7 +7,8 @@ _REPORT_DIRS = ("redisscope_html",)
 _INDEX_NAMES = ("index.html", "report.html")
 _HTML_SUFFIX = ".html"
 _RAW_LOGS_DIR = "redisscope_sp"
-_ANALYZER_LOGS = ("analysis_console.log", "redisscope_current.log")
+_ANALYZER_LOGS = ("redisscope_current.log", "analysis_console.log")
+_ANALYZER_LOG_DIR = "redisscope_logs"
 
 
 class AnalysisOutputs:
@@ -27,6 +28,10 @@ class AnalysisOutputs:
             if candidate.is_file():
                 return candidate
         return None
+
+    def analyzer_log_directory(self) -> Path | None:
+        directory = self._analysis.directory / _ANALYZER_LOG_DIR
+        return directory if directory.is_dir() else None
 
     def raw_logs(self) -> Path | None:
         logs = self._analysis.directory / _RAW_LOGS_DIR

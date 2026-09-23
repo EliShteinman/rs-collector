@@ -7,10 +7,10 @@ _BDB_ERROR = "Please answer with a database number or press Enter."
 _DEPTH_TITLE = "Analysis depth (Enter for the default):"
 _MASK_TITLE = "Mask sensitive values (Enter for no):"
 _DEPTH_LABELS: dict[AnalysisDepth, str] = {
-    AnalysisDepth.QUICK: "quick - skip the logs",
-    AnalysisDepth.DEFAULT: "default",
-    AnalysisDepth.FULL: "full - force a full analysis",
-    AnalysisDepth.MAX: "max - full analysis and pattern counts",
+    AnalysisDepth.QUICK: "quick - skip the support package tests",
+    AnalysisDepth.DEFAULT: "default - logs of the recent time window",
+    AnalysisDepth.FULL: "full - every log file",
+    AnalysisDepth.MAX: "deepest - every log file and every pattern counted",
 }
 _MASK_LABELS = ("no", "yes")
 _DEFAULT_DEPTH_INDEX = 1

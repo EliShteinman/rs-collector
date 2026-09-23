@@ -4,6 +4,7 @@ from markupsafe import Markup
 
 from rs_collector.jobs.models import JobView
 from rs_collector.web.views.layout import page, template
+from rs_collector.web.views.log_html import as_html
 from rs_collector.web.views.time_text import stamp
 
 _CONTENT = template("""
@@ -16,7 +17,7 @@ _CONTENT = template("""
     <span class="tag {{ job.status }}" id="job-status">{{ job.status }}</span>
     <span class="when">started {{ started }}</span>
   </div>
-  <pre class="log" id="job-log">{% for line in job.lines %}{{ line }}
+  <pre class="log" id="job-log">{% for line in job.lines %}{{ html(line) }}
 {% endfor %}</pre>
   <p class="outcome" id="job-outcome">{{ job.outcome }}</p>
   <p id="job-report">
@@ -30,5 +31,5 @@ _CONTENT = template("""
 
 
 def render(url: Callable[[str], str], job: JobView) -> str:
-    content = _CONTENT.render(url=url, job=job, started=stamp(job.started_at))
+    content = _CONTENT.render(url=url, job=job, started=stamp(job.started_at), html=as_html)
     return page(job.title, Markup(content), url)
