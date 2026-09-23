@@ -47,7 +47,7 @@ body {
   margin: 0;
   background: var(--page);
   color: var(--ink);
-  font: 400 15px/1.55 var(--sans);
+  font: 400 1rem/1.55 var(--sans);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -70,12 +70,11 @@ body {
   padding-left: .5rem;
 }
 
-.masthead .host { font: 400 13px/1 var(--mono); color: var(--ink-soft); }
+.masthead .host { font: 400 .82rem/1 var(--mono); color: var(--ink-soft); }
 .masthead .spacer { flex: 1; }
 
 main {
-  max-width: 68rem;
-  margin: 0 auto;
+  width: 100%;
   padding: 1.5rem;
   display: grid;
   gap: 1.5rem;
@@ -108,7 +107,7 @@ main {
 
 .meter {
   margin-top: .5rem;
-  height: 4px;
+  height: .25rem;
   background: var(--rule);
   border-radius: 2px;
   overflow: hidden;
@@ -243,9 +242,9 @@ td .note { margin-top: .1rem; }
   background: var(--page);
   border: 1px solid var(--rule);
   border-radius: 4px;
-  font: 400 12.5px/1.6 var(--mono);
+  font: 400 .8rem/1.6 var(--mono);
   white-space: pre-wrap;
-  max-height: 30rem;
+  max-height: 60vh;
   overflow: auto;
 }
 
@@ -257,7 +256,7 @@ td .note { margin-top: .1rem; }
   margin-bottom: .8rem;
 }
 .job-head h2 { margin: 0; font-size: .98rem; }
-.job-head .when { font: 400 12.5px/1 var(--mono); color: var(--ink-soft); }
+.job-head .when { font: 400 .8rem/1 var(--mono); color: var(--ink-soft); }
 .outcome { margin: .9rem 0 0; font-weight: 600; }
 .back { font-size: .88rem; }
 
@@ -285,9 +284,8 @@ td .note { margin-top: .1rem; }
   border: 1px solid var(--rule);
   border-radius: 4px;
   background: var(--page);
-  max-height: 34rem;
   overflow: auto;
-  font: 400 12.5px/1.55 var(--mono);
+  font: 400 .8rem/1.55 var(--mono);
 }
 .logline { display: flex; gap: .75rem; padding: 0 .6rem; }
 .logline:hover { background: var(--rule); }
@@ -306,12 +304,17 @@ td .note { margin-top: .1rem; }
 .logline.debug .lt { opacity: .7; }
 .logline.hidden { display: none; }
 
+body.wide { display: flex; flex-direction: column; height: 100vh; }
+body.wide main { flex: 1; min-height: 0; padding-bottom: 1rem; }
+body.wide .logview { display: flex; flex-direction: column; min-height: 0; }
+body.wide .loglines { flex: 1; min-height: 12rem; }
+
 .files { list-style: none; margin: 0; padding: 0; }
 .files li { padding: .4rem 0; border-bottom: 1px solid var(--rule); }
 .files li:last-child { border-bottom: 0; }
 .files a { font-family: var(--mono); font-size: .86rem; }
 
-@media (max-width: 640px) {
+@media (max-width: 40em) {
   main { padding: 1rem; gap: 1rem; }
   .fact { border-left: 0; border-top: 1px solid var(--rule); }
   .fact:first-child { border-top: 0; }

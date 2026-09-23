@@ -64,4 +64,4 @@ def render(
         parent_url=parent_url,
         size=size,
     )
-    return page(name, Markup(markup), url)
+    return page(name, Markup(markup), url, wide=True)

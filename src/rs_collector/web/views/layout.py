@@ -13,7 +13,7 @@ _PAGE = """<!doctype html>
 <title>{{ title }} — rsc</title>
 <link rel="stylesheet" href="{{ url('/static/app.css') }}">
 </head>
-<body>
+<body class="{{ 'wide' if wide }}">
 <header class="masthead">
   <a class="mark" href="{{ url('/') }}">rsc</a>
   <span class="host">{{ host }}</span>
@@ -45,7 +45,14 @@ def page(
     host: str = "",
     state: str = "",
     state_kind: str = "",
+    wide: bool = False,
 ) -> str:
     return _LAYOUT.render(
-        title=title, content=content, url=url, host=host, state=state, state_kind=state_kind
+        title=title,
+        content=content,
+        url=url,
+        host=host,
+        state=state,
+        state_kind=state_kind,
+        wide=wide,
     )
