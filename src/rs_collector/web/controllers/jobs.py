@@ -1,6 +1,8 @@
 from collections.abc import Callable, Mapping
 
+from rs_collector.analysis.models import StoredAnalysis
 from rs_collector.analysis.options import AnalysisOptions
+from rs_collector.analysis.outputs import AnalysisOutputs
 from rs_collector.exceptions.selection import ClusterNotFoundError
 from rs_collector.inventory.models import Cluster
 from rs_collector.jobs.console import JobConsole
@@ -15,7 +17,6 @@ from rs_collector.web.views import job as job_view
 
 _JOBS_PATH = "/jobs/"
 _ANALYSES_PATH = "/analyses/"
-_REPORT_FILE = "redisscope_html/report.html"
 
 
 class JobsController:
@@ -68,12 +69,17 @@ class JobsController:
         def work(job: Job) -> JobOutcome:
             container = self._container.with_console(JobConsole(job))
             analysis = container.analyze_workflow().run_for(package, options)
-            return JobOutcome(
-                f"The analysis {analysis.name} is ready",
-                f"{_ANALYSES_PATH}{analysis.name}/{_REPORT_FILE}",
-            )
+            return JobOutcome(f"The analysis {analysis.name} is ready", _report_url(analysis))
 
         return work
+
+
+def _report_url(analysis: StoredAnalysis) -> str:
+    report = AnalysisOutputs(analysis).report()
+    if report is None:
+        return f"{_ANALYSES_PATH}{analysis.name}/"
+    inside = str(report).removeprefix(str(analysis.directory)).lstrip("/")
+    return f"{_ANALYSES_PATH}{analysis.name}/{inside}"
 
 
 def _offset(request: Request) -> int:

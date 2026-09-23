@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 from pytest_mock import MockerFixture
 
+from rs_collector.analysis.outputs import AnalysisOutputs
 from rs_collector.cli.container import Container
 from rs_collector.jobs.models import JobStatus
 from rs_collector.jobs.registry import JobRegistry
@@ -390,3 +391,31 @@ def test_a_large_file_is_streamed_instead_of_being_held_in_memory(
     assert response.body == b""
     assert response.size() == 3_000_000
     assert sum(len(chunk) for chunk in response.chunks(65_536)) == 3_000_000
+
+
+def test_a_report_stylesheet_is_served_as_a_stylesheet(
+    application: WebApplication, container: Container
+) -> None:
+    pages = _analysis_directory(container) / "redisscope_html"
+    pages.mkdir()
+    (pages / "index.html").write_text(
+        '<html><head><link rel="stylesheet" href="style.css"></head></html>', encoding="utf-8"
+    )
+    (pages / "style.css").write_text("body { font-family: sans-serif }", encoding="utf-8")
+
+    response = _get(application, "/analyses/demo__default/redisscope_html/style.css")
+
+    assert response.content_type == "text/css; charset=utf-8"
+    assert b"font-family" in response.payload()
+
+
+def test_the_finished_job_links_to_the_report_that_was_written(
+    application: WebApplication, container: Container, package: str
+) -> None:
+    job_url = _post(application, "/analyze", f"package={package}&depth=default").headers["Location"]
+
+    body = _wait_for_job(application, job_url).body.decode()
+
+    written = AnalysisOutputs(container.analyses().list()[0]).report()
+    assert written is not None
+    assert f"redisscope_html/{written.name}" in body

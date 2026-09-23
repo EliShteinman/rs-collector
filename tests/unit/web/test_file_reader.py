@@ -77,3 +77,23 @@ def test_a_broken_archive_is_reported(reader: FileReader, tmp_path: Path) -> Non
 
     with pytest.raises(ArtifactNotFoundError):
         reader.read(broken)
+
+
+@pytest.mark.parametrize(
+    ("name", "expected"),
+    [
+        ("style.css", "text/css; charset=utf-8"),
+        ("app.js", "text/javascript; charset=utf-8"),
+        ("index.html", "text/html; charset=utf-8"),
+        ("redisscope_current.log", "text/plain; charset=utf-8"),
+        ("chart.svg", "image/svg+xml"),
+        ("logo.png", "image/png"),
+    ],
+)
+def test_the_report_assets_keep_their_own_type(
+    reader: FileReader, tmp_path: Path, name: str, expected: str
+) -> None:
+    asset = tmp_path / name
+    asset.write_text("body { color: red }", encoding="utf-8")
+
+    assert reader.read(asset)[1] == expected

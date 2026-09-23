@@ -4,6 +4,7 @@ from pathlib import Path
 _TEXT = "text/plain; charset=utf-8"
 _HTML = "text/html; charset=utf-8"
 _DEFAULT = "application/octet-stream"
+_CHARSET = "utf-8"
 _GZIP_SUFFIX = ".gz"
 _LOG_SUFFIXES = (".log", ".out", ".err")
 _TEXT_SUFFIXES = (
@@ -36,11 +37,13 @@ def content_type(path: Path) -> str:
     if _kind(name) in _TEXT_SUFFIXES:
         return _TEXT
     guessed, _ = mimetypes.guess_type(name.name)
+    if guessed is None:
+        return _DEFAULT
     if guessed == "text/html":
         return _HTML
-    if guessed is not None and guessed.startswith("text/"):
-        return _TEXT
-    return guessed or _DEFAULT
+    if guessed.startswith("text/"):
+        return f"{guessed}; charset={_CHARSET}"
+    return guessed
 
 
 def _kind(name: Path) -> str:
