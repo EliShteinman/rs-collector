@@ -62,10 +62,12 @@ diff <new>/config/settings.yml config/settings.yml    # copy over any new settin
 
 Open `http://<server>:3923/` and everything happens there:
 
+- see whether the interface runs in the background, whether it comes back after a reboot,
+  when the cleanup last ran and how much disk is left
 - pick a cluster and collect a new support package
 - pick a stored package and analyze it, choosing depth, a single database and masking
 - watch the log of a running collection or analysis as it happens
-- open the finished reports
+- open the finished reports, and keep any package or analysis beyond the retention period
 
 The same actions are available on the command line:
 
