@@ -10,4 +10,8 @@ def plain(text: str) -> str:
 
 
 def as_shown(line: str) -> str:
-    return plain(line.rsplit(_CARRIAGE_RETURN, maxsplit=1)[-1])
+    return plain(as_written(line))
+
+
+def as_written(line: str) -> str:
+    return line.rsplit(_CARRIAGE_RETURN, maxsplit=1)[-1]
