@@ -5,9 +5,9 @@ from markupsafe import Markup
 from rs_collector.web.views.layout import page, template
 
 _CONTENT = template("""
-<section class="card">
+<section class="panel">
   <h2>{{ heading }}</h2>
-  <ul class="rows">
+  <ul class="files">
     {% if parent %}
     <li><a href="{{ url(parent) }}">..</a></li>
     {% endif %}
@@ -15,7 +15,10 @@ _CONTENT = template("""
     <li><a href="{{ url(entry.url) }}">{{ entry.name }}</a></li>
     {% endfor %}
   </ul>
-  <p><a href="{{ url('/') }}">Back</a></p>
+  {% if not entries %}
+  <p class="empty">This directory is empty.</p>
+  {% endif %}
+  <p class="back"><a href="{{ url('/') }}">Back to the console</a></p>
 </section>
 """)
 

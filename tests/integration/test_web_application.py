@@ -104,3 +104,56 @@ def test_the_stylesheet_is_served(application: WebApplication) -> None:
     response = _get(application, "/static/app.css")
 
     assert response.status == 200 and response.content_type.startswith("text/css")
+
+
+def test_the_page_reports_the_free_disk_space(application: WebApplication) -> None:
+    body = _get(application, "/").body.decode()
+
+    assert "GB free" in body
+
+
+def test_the_page_reports_that_nothing_is_scheduled(application: WebApplication) -> None:
+    body = _get(application, "/").body.decode()
+
+    assert "Stays down" in body
+
+
+def test_a_package_can_be_kept_from_the_page(
+    application: WebApplication, container: Container, package: str
+) -> None:
+    response = _post(application, "/keep", f"name={package}")
+
+    assert response.status == 303
+    assert container.packages().get(package).metadata.pinned
+
+
+def test_a_kept_package_can_be_released(
+    application: WebApplication, container: Container, package: str
+) -> None:
+    _post(application, "/keep", f"name={package}")
+
+    _post(application, "/release", f"name={package}")
+
+    assert not container.packages().get(package).metadata.pinned
+
+
+def test_a_kept_package_is_marked_on_the_page(application: WebApplication, package: str) -> None:
+    _post(application, "/keep", f"name={package}")
+
+    assert "kept" in _get(application, "/").body.decode()
+
+
+def test_keeping_an_unknown_name_is_reported(application: WebApplication) -> None:
+    assert _post(application, "/keep", "name=missing").status == 404
+
+
+def test_the_bundled_font_is_served(application: WebApplication) -> None:
+    response = _get(application, "/static/fonts/plex-sans.woff2")
+
+    assert response.status == 200
+    assert response.content_type == "font/woff2"
+    assert response.body[:4] == b"wOF2"
+
+
+def test_an_unknown_font_is_refused(application: WebApplication) -> None:
+    assert _get(application, "/static/fonts/../../etc/passwd").status == 404

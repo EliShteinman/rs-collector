@@ -1,4 +1,5 @@
 import shutil
+from pathlib import Path
 
 from rs_collector.analysis.repository import AnalysisRepository
 from rs_collector.background.crontab import CrontabInstaller
@@ -51,13 +52,23 @@ class StatusService:
         storage = self._settings.storage
         packages = self._packages.list()
         analyses = self._analyses.list()
-        usage = shutil.disk_usage(storage.data_root)
+        free_bytes, total_bytes = _free_and_total(storage.data_root)
         return StorageStatus(
             data_root=storage.data_root,
-            free_bytes=usage.free,
-            total_bytes=usage.total,
+            free_bytes=free_bytes,
+            total_bytes=total_bytes,
             packages=len(packages),
             packages_bytes=sum(package.metadata.size_bytes for package in packages),
             analyses=len(analyses),
             pinned=sum(1 for item in (*packages, *analyses) if item.metadata.pinned),
         )
+
+
+def _free_and_total(path: Path) -> tuple[int, int]:
+    for candidate in (path, *path.parents):
+        try:
+            usage = shutil.disk_usage(candidate)
+        except OSError:
+            continue
+        return usage.free, usage.total
+    return 0, 0

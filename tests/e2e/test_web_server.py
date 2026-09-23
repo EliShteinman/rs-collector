@@ -52,7 +52,7 @@ def test_the_page_is_served_over_http(base_url: str) -> None:
     status, body = _get(f"{base_url}/")
 
     assert status == 200
-    assert "Collect a new support package" in body
+    assert "Collect a support package" in body
 
 
 def test_an_analysis_runs_and_the_report_is_served(base_url: str, package: str) -> None:

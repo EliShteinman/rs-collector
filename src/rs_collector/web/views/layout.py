@@ -1,4 +1,7 @@
-from jinja2 import Environment
+from collections.abc import Callable
+
+from jinja2 import Environment, Template
+from markupsafe import Markup
 
 _ENVIRONMENT = Environment(autoescape=True, trim_blocks=True, lstrip_blocks=True)
 
@@ -11,9 +14,13 @@ _PAGE = """<!doctype html>
 <link rel="stylesheet" href="{{ url('/static/app.css') }}">
 </head>
 <body>
-<header>
-  <a class="brand" href="{{ url('/') }}">rsc</a>
-  <span class="subtitle">RedisScope collector</span>
+<header class="masthead">
+  <a class="mark" href="{{ url('/') }}">rsc</a>
+  <span class="host">{{ host }}</span>
+  <span class="spacer"></span>
+  {% if state %}
+  <span class="pill {{ state_kind }}">{{ state }}</span>
+  {% endif %}
 </header>
 <main>
 {{ content }}
@@ -24,12 +31,21 @@ _PAGE = """<!doctype html>
 """
 
 
-def template(markup: str) -> Environment.template_class:
+def template(markup: str) -> Template:
     return _ENVIRONMENT.from_string(markup)
 
 
 _LAYOUT = template(_PAGE)
 
 
-def page(title: str, content: str, url: object) -> str:
-    return _LAYOUT.render(title=title, content=content, url=url)
+def page(
+    title: str,
+    content: Markup,
+    url: Callable[[str], str],
+    host: str = "",
+    state: str = "",
+    state_kind: str = "",
+) -> str:
+    return _LAYOUT.render(
+        title=title, content=content, url=url, host=host, state=state, state_kind=state_kind
+    )
