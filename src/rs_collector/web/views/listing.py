@@ -41,7 +41,12 @@ _CONTENT = template("""
   {% if not entries %}
   <p class="empty">This directory is empty.</p>
   {% endif %}
-  <p class="back"><a href="{{ url('/') }}">Back to the console</a></p>
+  <p class="back">
+    <a href="{{ url('/') }}">Back to the console</a>
+    {% if has_index %}
+    · <a href="{{ url(own_url) }}">Open this directory as a page</a>
+    {% endif %}
+  </p>
 </section>
 """)
 
@@ -57,9 +62,21 @@ class Entry(BaseModel):
 
 
 def render(
-    url: Callable[[str], str], heading: str, entries: Sequence[Entry], parent: str | None
+    url: Callable[[str], str],
+    heading: str,
+    entries: Sequence[Entry],
+    parent: str | None,
+    own_url: str = "",
+    has_index: bool = False,
 ) -> str:
     content = _CONTENT.render(
-        url=url, heading=heading, entries=entries, parent=parent, size=size, stamp=stamp
+        url=url,
+        heading=heading,
+        entries=entries,
+        parent=parent,
+        own_url=own_url,
+        has_index=has_index,
+        size=size,
+        stamp=stamp,
     )
     return page(heading, Markup(content), url)

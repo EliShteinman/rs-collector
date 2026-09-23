@@ -82,7 +82,7 @@ def test_the_finished_job_links_to_the_report(application: WebApplication, packa
 def test_the_report_is_served(application: WebApplication, package: str) -> None:
     job_url = _post(application, "/analyze", f"package={package}&depth=default").headers["Location"]
     _wait_for_job(application, job_url)
-    name = _get(application, "/analyses").body.decode()
+    name = _get(application, "/analyses/").body.decode()
 
     assert "__default" in name
 
@@ -189,7 +189,7 @@ def test_the_raw_logs_of_a_package_can_be_browsed(
     logs.mkdir(parents=True)
     (logs / "redis-server.log").write_text("started\n", encoding="utf-8")
 
-    body = _get(application, "/analyses/demo__default/redisscope_sp/node1").body.decode()
+    body = _get(application, "/analyses/demo__default/redisscope_sp/node1/").body.decode()
 
     assert "redis-server.log" in body
 
@@ -226,7 +226,7 @@ def test_the_listing_shows_sizes_and_dates(
     directory = _analysis_directory(container)
     (directory / "redisscope_attributes.txt").write_bytes(b"x" * 4036)
 
-    body = _get(application, "/analyses/demo__default").body.decode()
+    body = _get(application, "/analyses/demo__default/").body.decode()
 
     assert "3.9 KB" in body
 
@@ -264,3 +264,41 @@ def test_every_analysis_can_be_browsed_even_without_a_report(
     _wait_for_job(application, job_url)
 
     assert "All files" in _get(application, "/").body.decode()
+
+
+def test_a_directory_without_a_trailing_slash_is_redirected(
+    application: WebApplication, container: Container
+) -> None:
+    _analysis_directory(container)
+
+    response = _get(application, "/analyses/demo__default")
+
+    assert response.status == 303
+    assert response.headers["Location"] == "/analyses/demo__default/"
+
+
+def test_entering_the_report_directory_opens_its_page(
+    application: WebApplication, container: Container
+) -> None:
+    pages = _analysis_directory(container) / "redisscope_html"
+    pages.mkdir()
+    (pages / "index.html").write_text("<html>the report front page</html>", encoding="utf-8")
+    (pages / "cluster.html").write_text("<html>another page</html>", encoding="utf-8")
+
+    response = _get(application, "/analyses/demo__default/redisscope_html/")
+
+    assert response.content_type.startswith("text/html")
+    assert b"the report front page" in response.body
+
+
+def test_the_files_of_the_report_directory_can_still_be_listed(
+    application: WebApplication, container: Container
+) -> None:
+    pages = _analysis_directory(container) / "redisscope_html"
+    pages.mkdir()
+    (pages / "index.html").write_text("<html>the report front page</html>", encoding="utf-8")
+    (pages / "cluster.html").write_text("<html>another page</html>", encoding="utf-8")
+
+    body = _get(application, "/analyses/demo__default/redisscope_html/", "list=1").body.decode()
+
+    assert "cluster.html" in body

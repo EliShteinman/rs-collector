@@ -11,7 +11,10 @@ from rs_collector.web.views import listing
 
 _ANALYSES_PATH = "/analyses/"
 _RAW_FLAG = "raw"
+_LIST_FLAG = "list"
 _TRUTHY = ("1", "yes", "true")
+_INDEX_NAMES = ("index.html",)
+_SLASH = "/"
 
 
 class FilesController:
@@ -25,6 +28,8 @@ class FilesController:
         relative = parameters.get("path", "").strip("/")
         target = self._resolved(relative)
         if target.is_dir():
+            if not request.path.endswith(_SLASH):
+                return Response.redirect(request.url(f"{_ANALYSES_PATH}{relative}{_SLASH}"))
             return self._directory(request, target, relative)
         if target.is_file():
             body, content_type = self._reader.read(target, raw=_wants_raw(request))
@@ -40,9 +45,22 @@ class FilesController:
         return target
 
     def _directory(self, request: Request, target: Path, relative: str) -> Response:
+        index = self._index_of(target)
+        if index is not None and not _flag(request, _LIST_FLAG):
+            body, content_type = self._reader.read(index)
+            return Response.file(body, content_type)
         entries = [self._entry(child, relative) for child in _sorted(target)]
         heading = relative or self._heading
-        return Response.html(listing.render(request.url, heading, entries, self._parent(relative)))
+        return Response.html(
+            listing.render(
+                request.url,
+                heading,
+                entries,
+                self._parent(relative),
+                own_url=f"{_ANALYSES_PATH}{relative}",
+                has_index=index is not None,
+            )
+        )
 
     def _entry(self, child: Path, relative: str) -> listing.Entry:
         info = child.stat()
@@ -57,6 +75,13 @@ class FilesController:
                 else ""
             ),
         )
+
+    def _index_of(self, target: Path) -> Path | None:
+        for name in _INDEX_NAMES:
+            candidate = target / name
+            if candidate.is_file():
+                return candidate
+        return None
 
     def _parent(self, relative: str) -> str | None:
         if not relative:
@@ -74,4 +99,8 @@ def _joined(relative: str, name: str) -> str:
 
 
 def _wants_raw(request: Request) -> bool:
-    return request.query.get(_RAW_FLAG, "").lower() in _TRUTHY
+    return _flag(request, _RAW_FLAG)
+
+
+def _flag(request: Request, name: str) -> bool:
+    return request.query.get(name, "").lower() in _TRUTHY
