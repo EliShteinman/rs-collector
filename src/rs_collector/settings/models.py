@@ -38,7 +38,9 @@ class ServeSettings(BaseModel):
 
     host: str
     port: int = Field(gt=0, lt=65536)
-    share_name: str
+    base_path: str = Field(
+        default="", description="Path prefix when a reverse proxy serves rsc under a subpath"
+    )
 
 
 class BackgroundSettings(BaseModel):

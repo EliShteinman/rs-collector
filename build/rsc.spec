@@ -1,22 +1,17 @@
 # -*- mode: python ; coding: utf-8 -*-
 from pathlib import Path
 
-from PyInstaller.utils.hooks import collect_all
-
 PROJECT_ROOT = Path(SPECPATH).parent
 BINARY_NAME = "rsc"
-
-copyparty_datas, copyparty_binaries, copyparty_hidden = collect_all("copyparty")
 
 analysis = Analysis(
     [str(PROJECT_ROOT / "build" / "entrypoint.py")],
     pathex=[str(PROJECT_ROOT / "src")],
-    binaries=copyparty_binaries,
-    datas=copyparty_datas,
+    binaries=[],
+    datas=[],
     hiddenimports=[
         "rs_collector.cli.app",
         "logging.handlers",
-        *copyparty_hidden,
     ],
     hookspath=[],
     runtime_hooks=[],

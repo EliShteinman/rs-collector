@@ -8,5 +8,5 @@ class ServeCommand:
         self._container = container
 
     def execute(self) -> int:
-        self._container.display_server().start()
+        self._container.web_server().serve_forever()
         return _EXIT_SUCCESS

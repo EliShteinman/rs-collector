@@ -1,8 +1,12 @@
 from collections.abc import Iterator
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+import yaml
 
+from rs_collector.cli.container import Container
+from rs_collector.packages.models import PackageMetadata
 from rs_collector.settings.models import AppSettings
 from rs_collector.settings.paths import ConfigPaths
 
@@ -56,7 +60,7 @@ def settings_document(tmp_path: Path) -> dict[str, object]:
             "console_log_name": "analysis_console.log",
         },
         "retention": {"max_age_days": 7},
-        "serve": {"host": "0.0.0.0", "port": 3923, "share_name": "analyses"},
+        "serve": {"host": "0.0.0.0", "port": 3923, "base_path": ""},
         "background": {
             "pid_file_name": "serve.pid",
             "console_log_name": "serve_console.log",
@@ -91,3 +95,57 @@ def clean_environment(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     ):
         monkeypatch.delenv(name, raising=False)
     yield
+
+
+_FAKE_ANALYZER = """#!/bin/sh
+mkdir -p redisscope_html
+echo "<html>the report</html>" > redisscope_html/report.html
+"""
+
+
+@pytest.fixture
+def analyzer(tmp_path: Path) -> Path:
+    path = tmp_path / "redisscope"
+    path.write_text(_FAKE_ANALYZER, encoding="utf-8")
+    path.chmod(0o755)
+    return path
+
+
+@pytest.fixture
+def web_paths(tmp_path: Path, settings_document: dict[str, object], analyzer: Path) -> ConfigPaths:
+    config_dir = tmp_path / "web-config"
+    config_dir.mkdir()
+    paths = ConfigPaths(config_dir=config_dir)
+    document = dict(settings_document)
+    document["analysis"] = {**settings_document["analysis"], "redisscope_binary": str(analyzer)}
+    paths.settings_file.write_text(yaml.safe_dump(document), encoding="utf-8")
+    paths.clusters_file.write_text(
+        yaml.safe_dump({"environments": {"production": [{"fqdn": "c1.example.com"}]}}),
+        encoding="utf-8",
+    )
+    paths.logging_file.write_text(
+        yaml.safe_dump({"version": 1, "disable_existing_loggers": False}), encoding="utf-8"
+    )
+    return paths
+
+
+@pytest.fixture
+def container(web_paths: ConfigPaths) -> Container:
+    return Container(paths=web_paths)
+
+
+@pytest.fixture
+def package(container: Container) -> str:
+    metadata = PackageMetadata(
+        name="c1.example.com__2026-09-23_10-00-00",
+        cluster_fqdn="c1.example.com",
+        environment="production",
+        collected_from="n1.c1.example.com",
+        collected_at=datetime.now(UTC),
+        original_file_name="debuginfo.tar.gz",
+        size_bytes=1024,
+        sha256="a" * 64,
+    )
+    stored = container.packages().save(metadata)
+    stored.archive_path.write_bytes(b"payload")
+    return stored.name

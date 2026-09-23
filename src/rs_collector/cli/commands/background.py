@@ -20,7 +20,7 @@ class StartCommand:
 
     def _address(self) -> str:
         serve = self._container.settings.serve
-        return f"http://{socket.gethostname()}:{serve.port}/{serve.share_name}/"
+        return f"http://{socket.gethostname()}:{serve.port}{serve.base_path}/"
 
 
 class StopCommand:

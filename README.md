@@ -26,7 +26,7 @@ cd rsc-release
 rsc-release/
 ├── rsc          the program
 ├── rsc.env      RSC_DATA_ROOT and the SSH settings
-└── config/      settings.yml, clusters.yml, logging.yml, copyparty.conf
+└── config/      settings.yml, clusters.yml, logging.yml
 ```
 
 Fill in:

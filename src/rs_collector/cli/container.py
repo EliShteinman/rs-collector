@@ -32,11 +32,12 @@ from rs_collector.selection.connection_string_selector import ConnectionStringCl
 from rs_collector.selection.interactive import InteractiveClusterSelector
 from rs_collector.selection.resolver import ClusterResolver
 from rs_collector.selection.selector import ClusterSelector
-from rs_collector.serve.server import DisplayServer
 from rs_collector.settings.credentials import SshCredentials
 from rs_collector.settings.loader import SettingsLoader
 from rs_collector.settings.models import AppSettings
 from rs_collector.settings.paths import ConfigPaths, ConfigPathsResolver
+from rs_collector.web.application import WebApplication
+from rs_collector.web.server import WebServer
 from rs_collector.workflows.analyze import AnalyzeWorkflow
 from rs_collector.workflows.collect import CollectWorkflow
 
@@ -53,6 +54,9 @@ class Container:
 
     def configure_logging(self) -> None:
         LoggingConfigurator(self._paths).configure(self.log_dir)
+
+    def with_console(self, console: ConsoleIo) -> Container:
+        return Container(paths=self._paths, console=console)
 
     @property
     def settings(self) -> AppSettings:
@@ -103,8 +107,8 @@ class Container:
     def crontab_client(self) -> CrontabClient:
         return SystemCrontab()
 
-    def display_server(self) -> DisplayServer:
-        return DisplayServer(self._settings.serve, self._settings.storage, self._paths.serve_file)
+    def web_server(self) -> WebServer:
+        return WebServer(WebApplication(self), self._settings.serve)
 
     def analyze_workflow(self) -> AnalyzeWorkflow:
         return AnalyzeWorkflow(

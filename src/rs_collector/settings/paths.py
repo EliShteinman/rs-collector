@@ -9,7 +9,6 @@ _CONFIG_DIR_NAME = "config"
 _SETTINGS_FILE_NAME = "settings.yml"
 _CLUSTERS_FILE_NAME = "clusters.yml"
 _LOGGING_FILE_NAME = "logging.yml"
-_SERVE_FILE_NAME = "copyparty.conf"
 _ENV_FILE_NAME = "rsc.env"
 
 
@@ -42,10 +41,6 @@ class ConfigPaths(BaseModel):
     @property
     def logging_file(self) -> Path:
         return self.config_dir / _LOGGING_FILE_NAME
-
-    @property
-    def serve_file(self) -> Path:
-        return self.config_dir / _SERVE_FILE_NAME
 
     @property
     def env_file(self) -> Path:

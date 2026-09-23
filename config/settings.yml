@@ -29,7 +29,7 @@ retention:
 serve:
   host: 0.0.0.0
   port: 3923
-  share_name: analyses
+  base_path: ""
 
 background:
   pid_file_name: serve.pid
