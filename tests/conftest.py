@@ -1,3 +1,5 @@
+import gzip
+import json
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
@@ -164,3 +166,59 @@ def package(container: Container) -> str:
     stored = container.packages().save(metadata)
     stored.archive_path.write_bytes(b"payload")
     return stored.name
+
+
+_RLADMIN_STATUS = """CLUSTER NODES:
+NODE:ID   ROLE        ADDRESS      RACK-ID   STATUS
+node:1    master      10.0.0.1               OK
+node:2    slave       10.0.0.2               OK
+
+DATABASES:
+DB:ID     NAME        TYPE     STATUS   SHARDS   PLACEMENT
+db:1      orders      redis    active   2        dense
+db:2      sessions    redis    active   1        dense
+
+SHARDS:
+DB:ID     NAME        ID        NODE      ROLE     SLOTS       USED_MEMORY   STATUS
+db:1      orders      redis:3   node:1    master   0-8191      2.1MB         OK
+db:1      orders      redis:4   node:2    slave    0-8191      2.0MB         OK
+db:2      sessions    redis:7   node:1    master   0-16383     1.4MB         OK
+"""
+
+_CCS = {
+    "bdb:1": {"name": "orders", "redis_list": [3, 4], "crdt": False},
+    "bdb:2": {"name": "sessions", "redis_list": [7], "crdt": True, "crdt_guid": "abc"},
+    "node:1": {"uid": 1},
+}
+
+
+@pytest.fixture
+def support_package(tmp_path: Path) -> Path:
+    root = tmp_path / "redisscope_sp"
+    for node in ("node_1", "node_2"):
+        (root / node / "logs").mkdir(parents=True)
+        (root / node / "conf").mkdir(parents=True)
+    (root / "node_1" / "node_1.rladmin").write_text(_RLADMIN_STATUS, encoding="utf-8")
+    (root / "node_1" / "ccs_redis.json").write_text(json.dumps(_CCS), encoding="utf-8")
+    logs_one = root / "node_1" / "logs"
+    logs_two = root / "node_2" / "logs"
+    (logs_one / "redis_3.log").write_text(
+        "3:M 23 Sep 2026 10:00:02.100 * newest line of shard 3\n", encoding="utf-8"
+    )
+    (logs_one / "redis_3.log.1").write_text(
+        "3:M 23 Sep 2026 09:00:01.100 * older line of shard 3\n", encoding="utf-8"
+    )
+    (logs_one / "redis_3.log.2.gz").write_bytes(
+        gzip.compress(b"3:M 23 Sep 2026 08:00:00.100 * oldest line of shard 3\n")
+    )
+    (logs_two / "redis_4.log").write_text(
+        "4:S 23 Sep 2026 10:00:03.100 * line of shard 4\n", encoding="utf-8"
+    )
+    (logs_one / "redis_7.log").write_text(
+        "7:M 23 Sep 2026 10:00:04.100 * line of shard 7\n", encoding="utf-8"
+    )
+    (logs_one / "crdt_syncer-2.log").write_text(
+        "2026-09-23 10:00:05 - INFO - syncing from the remote cluster\n", encoding="utf-8"
+    )
+    (logs_one / "redis_mgr.log").write_text("not a shard log\n", encoding="utf-8")
+    return root

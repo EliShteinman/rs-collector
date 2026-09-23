@@ -23,6 +23,11 @@ from rs_collector.exceptions.configuration import (
     MissingCredentialsError,
     MissingSettingError,
 )
+from rs_collector.exceptions.dblogs import (
+    DatabaseLogsError,
+    DatabaseNotFoundError,
+    NoLogsForDatabaseError,
+)
 from rs_collector.exceptions.jobs import JobError, JobNotFoundError
 from rs_collector.exceptions.privileges import PrivilegeError, RunningAsRootError
 from rs_collector.exceptions.processes import (
@@ -79,6 +84,8 @@ __all__ = [
     "ConfigurationError",
     "ConnectionStringError",
     "CrontabError",
+    "DatabaseLogsError",
+    "DatabaseNotFoundError",
     "DebugInfoOutputError",
     "DisplayServerStartError",
     "EmptyInventoryError",
@@ -89,6 +96,7 @@ __all__ = [
     "MetadataError",
     "MissingCredentialsError",
     "MissingSettingError",
+    "NoLogsForDatabaseError",
     "PackageNotFoundError",
     "PrivilegeError",
     "ProcessError",
