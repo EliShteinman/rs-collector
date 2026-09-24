@@ -32,7 +32,8 @@ rsc-release/
 Fill in:
 
 - `rsc.env` — `RSC_DATA_ROOT` (the directory all output goes to), the SSH user, key or
-  password, and `RSC_SUDO_PASSWORD` only if `sudo su -` asks for one on the cluster nodes
+  password, `RSC_SUDO_PASSWORD` only if `sudo su -` asks for one on the cluster nodes, and
+  `RSC_WEB_USER` with `RSC_WEB_PASSWORD` for the login the web interface asks for
 - `config/clusters.yml` — the environments and their clusters
 - `config/settings.yml` — `analysis.redisscope_binary`, only if `redisscope` is not on the `PATH`
 
@@ -63,7 +64,7 @@ diff <new>/config/settings.yml config/settings.yml    # copy over any new settin
 Open `http://<server>:3923/` and everything happens there:
 
 - see whether the interface runs in the background, whether it comes back after a reboot,
-  when the cleanup last ran and how much disk is left
+  whether it asks for a login, when the cleanup last ran and how much disk is left
 - pick a cluster and collect a new support package
 - pick a stored package and analyze it, choosing depth, a single database and masking
 - watch the log of a running collection or analysis as it happens
@@ -88,22 +89,89 @@ The same actions are available on the command line:
 
 ## Who can use it
 
-The web interface has no login. Anyone who can reach the port can collect, analyze and read
-everything, and a collection they start uses the SSH credentials of the user who started the
-server. Keep it on an internal network, or put authentication in front of it in NGINX.
+The web interface asks for a user and a password when `rsc.env` holds them:
+
+```
+RSC_WEB_USER=ops
+RSC_WEB_PASSWORD=<the password>
+```
+
+Every page, file and report is then behind that login, the browser asks for it once per
+session, and a refused attempt is written to the rsc log with the user name that was tried.
+Setting only one of the two variables is refused at startup, so a typo cannot quietly leave
+the interface open.
+
+With neither variable set the interface has no login: anyone who can reach the port can
+collect, analyze and read everything. rsc then writes a warning to its log and says so on
+the console page, under "Who can open it". Restart with `./rsc stop && ./rsc start` after
+changing the variables.
+
+There is one login for everyone, not an account per person. It says who may open the
+interface, not who did what: a collection is always run by the user that owns the rsc
+process, with that user's SSH credentials. Because the password travels in the request,
+publish the interface over HTTPS only, as below.
 
 ## Behind a reverse proxy
 
 rsc speaks plain HTTP on one port and needs no websockets, so it sits behind NGINX
-unchanged. To publish it on port 80 or 443:
+unchanged. Bind it to localhost first, so the only way in is through the proxy — in
+`config/settings.yml`:
+
+```yaml
+serve:
+  host: 127.0.0.1
+  port: 3923
+```
+
+Then put this in `/etc/nginx/conf.d/rsc.conf`, with your own host name and certificate:
 
 ```nginx
-location / {
-    proxy_pass http://127.0.0.1:3923;
-    proxy_set_header Host $host;
-    proxy_read_timeout 300s;
+server {
+    listen 80;
+    server_name rsc.example.com;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name rsc.example.com;
+
+    ssl_certificate     /etc/pki/tls/certs/rsc.example.com.crt;
+    ssl_certificate_key /etc/pki/tls/private/rsc.example.com.key;
+
+    access_log /var/log/nginx/rsc_access.log;
+    error_log  /var/log/nginx/rsc_error.log;
+
+    location / {
+        proxy_pass http://127.0.0.1:3923;
+
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_http_version 1.1;
+        proxy_buffering off;
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
+    }
 }
 ```
+
+What each part is for:
+
+- `proxy_buffering off` sends a report or a log file straight through instead of spooling it
+  to disk first, which matters because a package's logs run to tens of megabytes
+- `proxy_read_timeout 300s` covers the long requests: collecting a package and starting an
+  analysis answer immediately, but a large download does not
+- the login needs nothing extra. NGINX passes the `Authorization` header on by default, so
+  rsc sees it. Do not add `auth_basic` as well, or the browser will ask twice
+- no `client_max_body_size` is needed: nothing is ever uploaded to rsc
+
+Reload with `nginx -t && systemctl reload nginx`. On RHEL, SELinux blocks the proxy until
+`setsebool -P httpd_can_network_connect on`, and the firewall needs
+`firewall-cmd --permanent --add-service=https && firewall-cmd --reload`.
 
 To publish it under a subpath, tell rsc the prefix. Either set `serve.base_path: "/rsc"` in
 `settings.yml`, or let NGINX send it:
