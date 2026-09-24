@@ -7,6 +7,7 @@ from rs_collector.packages.repository import PackageRepository
 from rs_collector.retention.pin import PinService
 from rs_collector.settings.models import AppSettings
 from rs_collector.status.service import StatusService
+from rs_collector.web.security.access import AccessGuard
 from rs_collector.workflows.analyze import AnalyzeWorkflow
 from rs_collector.workflows.collect import CollectWorkflow
 
@@ -26,6 +27,8 @@ class WebContext(Protocol):
     def pins(self) -> PinService: ...
 
     def status(self) -> StatusService: ...
+
+    def access_guard(self) -> AccessGuard: ...
 
     def collect_workflow(self) -> CollectWorkflow: ...
 

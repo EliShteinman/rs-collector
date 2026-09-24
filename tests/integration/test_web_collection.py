@@ -20,6 +20,7 @@ from rs_collector.settings.credentials import SshCredentials
 from rs_collector.settings.models import AppSettings
 from rs_collector.web.application import WebApplication
 from rs_collector.web.http import Request
+from rs_collector.web.security.access import AccessGuard, OpenAccess
 from rs_collector.workflows.analyze import AnalyzeWorkflow
 from rs_collector.workflows.collect import CollectWorkflow
 
@@ -84,6 +85,9 @@ class FakeContext:
             SshCredentials(ssh_user="admin", ssh_password="secret"),
             self._console,
         )
+
+    def access_guard(self) -> AccessGuard:
+        return OpenAccess()
 
     def analyze_workflow(self) -> AnalyzeWorkflow:
         return AnalyzeWorkflow(

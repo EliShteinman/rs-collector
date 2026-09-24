@@ -8,8 +8,15 @@ from rs_collector.exceptions.background import CrontabError
 from rs_collector.logging_setup.configurator import LoggerFactory
 from rs_collector.packages.repository import PackageRepository
 from rs_collector.retention.history import CleanupHistory
+from rs_collector.settings.credentials import WebCredentials
 from rs_collector.settings.models import AppSettings
-from rs_collector.status.models import ScheduleStatus, ServerStatus, StorageStatus, SystemStatus
+from rs_collector.status.models import (
+    AccessStatus,
+    ScheduleStatus,
+    ServerStatus,
+    StorageStatus,
+    SystemStatus,
+)
 
 
 class StatusService:
@@ -21,6 +28,7 @@ class StatusService:
         history: CleanupHistory,
         packages: PackageRepository,
         analyses: AnalysisRepository,
+        web_credentials: WebCredentials,
     ) -> None:
         self._settings = settings
         self._pid_file = pid_file
@@ -28,12 +36,20 @@ class StatusService:
         self._history = history
         self._packages = packages
         self._analyses = analyses
+        self._web_credentials = web_credentials
         self._logger = LoggerFactory.for_component("status")
 
     def collect(self) -> SystemStatus:
         return SystemStatus(
-            server=self._server(), schedule=self._schedule(), storage=self._storage()
+            server=self._server(),
+            schedule=self._schedule(),
+            storage=self._storage(),
+            access=self._access(),
         )
+
+    def _access(self) -> AccessStatus:
+        credentials = self._web_credentials
+        return AccessStatus(protected=credentials.demanded, user=credentials.web_user)
 
     def _server(self) -> ServerStatus:
         serve = self._settings.serve

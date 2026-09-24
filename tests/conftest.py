@@ -70,6 +70,7 @@ def settings_document(tmp_path: Path) -> dict[str, object]:
             "host": "0.0.0.0",
             "port": 3923,
             "base_path": "",
+            "auth_realm": "rsc",
             "max_inline_bytes": 5_242_880,
             "max_log_lines": 5_000,
             "max_jobs": 50,

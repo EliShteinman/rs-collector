@@ -21,6 +21,8 @@ from rs_collector.web.files.log_lines import LogReader
 from rs_collector.web.files.reader import FileReader
 from rs_collector.web.http import Request, Response
 from rs_collector.web.router import Router
+from rs_collector.web.security.access import AccessGuard
+from rs_collector.web.security.challenge import challenge
 from rs_collector.web.views import failure
 
 _GET = "GET"
@@ -42,14 +44,23 @@ _UNEXPECTED = "The server hit an unexpected error. The details are in the rsc lo
 
 
 class WebApplication:
-    def __init__(self, container: WebContext, jobs: JobRegistry | None = None) -> None:
+    def __init__(
+        self,
+        container: WebContext,
+        jobs: JobRegistry | None = None,
+        guard: AccessGuard | None = None,
+    ) -> None:
         self._container = container
         serve = container.settings.serve
         self._jobs = jobs or JobRegistry(serve.max_jobs, serve.max_job_lines)
+        self._guard = guard or container.access_guard()
+        self._realm = serve.auth_realm
         self._router = self._routes()
         self._logger = LoggerFactory.for_component("web")
 
     def handle(self, request: Request) -> Response:
+        if not self._guard.allows(request):
+            return challenge(request, self._realm)
         try:
             return self._router.resolve(request)
         except _NOT_FOUND as error:

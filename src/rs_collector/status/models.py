@@ -54,9 +54,17 @@ class StorageStatus(BaseModel):
         return (self.total_bytes - self.free_bytes) / self.total_bytes
 
 
+class AccessStatus(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    protected: bool
+    user: str = Field(default="")
+
+
 class SystemStatus(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     server: ServerStatus
     schedule: ScheduleStatus
     storage: StorageStatus
+    access: AccessStatus

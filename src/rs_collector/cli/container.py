@@ -33,12 +33,13 @@ from rs_collector.selection.connection_string_selector import ConnectionStringCl
 from rs_collector.selection.interactive import InteractiveClusterSelector
 from rs_collector.selection.resolver import ClusterResolver
 from rs_collector.selection.selector import ClusterSelector
-from rs_collector.settings.credentials import SshCredentials
+from rs_collector.settings.credentials import SshCredentials, WebCredentials
 from rs_collector.settings.loader import SettingsLoader
 from rs_collector.settings.models import AppSettings
 from rs_collector.settings.paths import ConfigPaths, ConfigPathsResolver
 from rs_collector.status.service import StatusService
 from rs_collector.web.application import WebApplication
+from rs_collector.web.security.access import AccessGuard, access_guard
 from rs_collector.web.server import WebServer
 from rs_collector.workflows.analyze import AnalyzeWorkflow
 from rs_collector.workflows.collect import CollectWorkflow
@@ -50,6 +51,7 @@ class Container:
         self._console = console or StandardConsole()
         self._settings = SettingsLoader(self._paths).load()
         self._credentials = SshCredentials.load(self._paths.env_file)
+        self._web_credentials = WebCredentials.load(self._paths.env_file)
         self._inventory: InventoryRepository = CachingInventoryRepository(
             YamlInventoryRepository(self._paths)
         )
@@ -104,7 +106,11 @@ class Container:
             self.cleanup_history(),
             self.packages(),
             self.analyses(),
+            self._web_credentials,
         )
+
+    def access_guard(self) -> AccessGuard:
+        return access_guard(self._web_credentials)
 
     def cleanup_history(self) -> CleanupHistory:
         return CleanupHistory(self._settings.storage)

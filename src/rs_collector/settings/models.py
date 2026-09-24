@@ -44,6 +44,7 @@ class ServeSettings(BaseModel):
     base_path: str = Field(
         default="", description="Path prefix when a reverse proxy serves rsc under a subpath"
     )
+    auth_realm: str = Field(description="Name the browser shows in its login box")
     max_inline_bytes: int = Field(gt=0, description="How much of a log file the browser shows")
     max_log_lines: int = Field(gt=0, description="How many log lines the viewer renders")
     max_jobs: int = Field(gt=0, description="How many finished runs the console remembers")

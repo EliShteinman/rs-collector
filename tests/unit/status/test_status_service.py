@@ -12,6 +12,7 @@ from rs_collector.packages.models import PackageMetadata
 from rs_collector.packages.repository import PackageRepository
 from rs_collector.retention.cleaner import CleanupReport
 from rs_collector.retention.history import CleanupHistory
+from rs_collector.settings.credentials import WebCredentials
 from rs_collector.settings.models import AppSettings
 from rs_collector.status.service import StatusService
 
@@ -46,6 +47,7 @@ def service(app_settings: AppSettings, crontab: FakeCrontab) -> StatusService:
         CleanupHistory(app_settings.storage),
         PackageRepository(app_settings.storage),
         AnalysisRepository(app_settings.storage),
+        WebCredentials(),
     )
 
 
@@ -116,6 +118,7 @@ def test_a_refused_crontab_only_means_nothing_is_scheduled(
         CleanupHistory(app_settings.storage),
         PackageRepository(app_settings.storage),
         AnalysisRepository(app_settings.storage),
+        WebCredentials(),
     )
 
     assert service.collect().schedule.starts_after_reboot is False

@@ -4,14 +4,17 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from base64 import b64encode
 from collections.abc import Iterator
 
 import pytest
 
 from rs_collector.cli.container import Container
 from rs_collector.jobs.models import JobStatus
+from rs_collector.settings.credentials import WebCredentials
 from rs_collector.settings.models import ServeSettings
 from rs_collector.web.application import WebApplication
+from rs_collector.web.security.access import BasicAccess
 from rs_collector.web.server import WebServer
 
 pytestmark = pytest.mark.e2e
@@ -25,18 +28,22 @@ def _free_port() -> int:
         return int(probe.getsockname()[1])
 
 
-@pytest.fixture
-def base_url(container: Container) -> Iterator[str]:
-    settings = ServeSettings(
+def _serve_settings(port: int) -> ServeSettings:
+    return ServeSettings(
         host="127.0.0.1",
-        port=_free_port(),
+        port=port,
         base_path="",
+        auth_realm="rsc",
         max_inline_bytes=5_242_880,
         max_log_lines=5_000,
         max_jobs=50,
         max_job_lines=2_000,
     )
-    server = WebServer(WebApplication(container), settings)
+
+
+@pytest.fixture
+def base_url(container: Container) -> Iterator[str]:
+    server = WebServer(WebApplication(container), _serve_settings(_free_port()))
     with server.running() as port:
         yield f"http://127.0.0.1:{port}"
 
@@ -99,3 +106,26 @@ def test_a_large_file_arrives_whole_over_http(base_url: str, container: Containe
         timeout=_TIMEOUT_SECONDS,
     ) as response:
         assert len(response.read()) == 2_000_000
+
+
+@pytest.fixture
+def protected_url(container: Container) -> Iterator[str]:
+    guard = BasicAccess(WebCredentials(web_user="ops", web_password="letmein"))
+    server = WebServer(WebApplication(container, guard=guard), _serve_settings(_free_port()))
+    with server.running() as port:
+        yield f"http://127.0.0.1:{port}"
+
+
+def test_a_protected_server_asks_for_a_login(protected_url: str) -> None:
+    status, _ = _get(f"{protected_url}/")
+
+    assert status == 401
+
+
+def test_a_protected_server_opens_with_the_login(protected_url: str) -> None:
+    encoded = b64encode(b"ops:letmein").decode()
+    request = urllib.request.Request(
+        f"{protected_url}/", headers={"Authorization": f"Basic {encoded}"}
+    )
+    with urllib.request.urlopen(request, timeout=_TIMEOUT_SECONDS) as response:
+        assert response.status == 200

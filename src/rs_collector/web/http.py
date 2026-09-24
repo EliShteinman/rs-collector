@@ -56,8 +56,15 @@ class Response:
     length: int | None = None
 
     @classmethod
-    def html(cls, markup: str, status: int = 200) -> Response:
-        return cls(status=status, body=markup.encode(_ENCODING), content_type=_HTML)
+    def html(
+        cls, markup: str, status: int = 200, headers: Mapping[str, str] | None = None
+    ) -> Response:
+        return cls(
+            status=status,
+            body=markup.encode(_ENCODING),
+            content_type=_HTML,
+            headers=headers or {},
+        )
 
     @classmethod
     def json(cls, payload: str, status: int = 200) -> Response:

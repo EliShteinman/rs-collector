@@ -51,6 +51,19 @@ _CONTENT = template("""
     {% endif %}
   </div>
   <div class="fact">
+    <h3>Who can open it</h3>
+    {% if status.access.protected %}
+    <p>Asks for a login</p>
+    <p class="note">As <span class="num">{{ status.access.user }}</span></p>
+    {% else %}
+    <p>Open to the network</p>
+    <p class="note">
+      Set <span class="num">RSC_WEB_USER</span> and
+      <span class="num">RSC_WEB_PASSWORD</span> in rsc.env to ask for a login
+    </p>
+    {% endif %}
+  </div>
+  <div class="fact">
     <h3>Cleanup</h3>
     <p>{{ cleanup_schedule }}</p>
     {% if status.schedule.cleanup_last_run %}
