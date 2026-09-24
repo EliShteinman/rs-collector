@@ -194,7 +194,7 @@ _CONTENT = template("""
           <form method="post" action="{{ url('/analyze') }}">
             <input type="hidden" name="package" value="{{ package.name }}">
             <input type="hidden" name="depth" value="default">
-            <button class="quiet" type="submit">Analyze</button>
+            <button class="action primary" type="submit">Analyze</button>
           </form>
           {{ keep_button(package.name, package.metadata.pinned) }}
         </td>
@@ -237,21 +237,26 @@ _CONTENT = template("""
         <td>{% if analysis.metadata.pinned %}<span class="tag kept">kept</span>{% endif %}</td>
         <td class="actions">
           {% if links[analysis.name].report %}
-          <a class="report" href="{{ url(links[analysis.name].report) }}">Report</a>
+          <a class="action primary" href="{{ url(links[analysis.name].report) }}">Report</a>
+          {% endif %}
+          {% if links[analysis.name].databases %}
+          <a class="action" href="{{ url(links[analysis.name].databases) }}"
+             title="Every log of one database, merged per shard">By database</a>
           {% endif %}
           {% if links[analysis.name].raw_logs %}
-          <a href="{{ url(links[analysis.name].raw_logs) }}">Raw logs</a>
+          <a class="action" href="{{ url(links[analysis.name].raw_logs) }}"
+             title="The cluster logs RedisScope extracted from the package">Cluster logs</a>
           {% endif %}
           {% if links[analysis.name].analyzer_log %}
-          <a href="{{ url(links[analysis.name].analyzer_log) }}">Run log</a>
+          <a class="action" href="{{ url(links[analysis.name].analyzer_log) }}"
+             title="What RedisScope printed while it ran">Run log</a>
           {% endif %}
           {% if links[analysis.name].analyzer_logs %}
-          <a href="{{ url(links[analysis.name].analyzer_logs) }}">All its logs</a>
+          <a class="action" href="{{ url(links[analysis.name].analyzer_logs) }}"
+             title="The log files RedisScope wrote about itself">Its own logs</a>
           {% endif %}
-          <a href="{{ url(links[analysis.name].files) }}">All files</a>
-          {% if links[analysis.name].databases %}
-          <a href="{{ url(links[analysis.name].databases) }}">Logs by database</a>
-          {% endif %}
+          <a class="action" href="{{ url(links[analysis.name].files) }}"
+             title="Every file of this analysis">All files</a>
           {{ keep_button(analysis.name, analysis.metadata.pinned) }}
         </td>
       </tr>
@@ -293,7 +298,7 @@ _CONTENT = template("""
 _KEEP_BUTTON = template("""
 <form method="post" action="{{ url(action) }}">
   <input type="hidden" name="name" value="{{ name }}">
-  <button class="quiet" type="submit">{{ label }}</button>
+  <button class="action keep" type="submit">{{ label }}</button>
 </form>
 """)
 

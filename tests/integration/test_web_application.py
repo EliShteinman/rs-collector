@@ -255,7 +255,17 @@ def test_the_console_links_to_the_raw_logs(
 
     body = _get(application, "/").body.decode()
 
-    assert "Raw logs" in body and "redisscope_sp" in body
+    assert "Cluster logs" in body
+
+
+def test_the_link_to_the_raw_logs_points_at_the_extracted_package(
+    application: WebApplication, container: Container, package: str
+) -> None:
+    job_url = _post(application, "/analyze", f"package={package}&depth=default").headers["Location"]
+    _wait_for_job(application, job_url)
+    (container.analyses().list()[0].directory / "redisscope_sp").mkdir(exist_ok=True)
+
+    assert "redisscope_sp" in _get(application, "/").body.decode()
 
 
 def test_every_analysis_can_be_browsed_even_without_a_report(

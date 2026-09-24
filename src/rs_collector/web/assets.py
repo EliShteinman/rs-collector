@@ -210,16 +210,32 @@ button {
   cursor: pointer;
 }
 button:hover { opacity: .88; }
-button.quiet {
-  color: var(--ink);
-  background: transparent;
-  border-color: var(--rule);
-  padding: .35rem .6rem;
-  font-size: .82rem;
-}
 
 a { color: var(--ink); text-decoration-color: var(--rule); text-underline-offset: 2px; }
 a.report { font-weight: 600; }
+
+.action {
+  display: inline-block;
+  font: 500 .82rem/1 var(--sans);
+  padding: .35rem .6rem;
+  color: var(--ink);
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.action:hover { border-color: var(--ink-soft); }
+
+.action.primary {
+  font-weight: 600;
+  color: var(--panel);
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+.action.primary:hover { opacity: .88; }
 
 table { width: 100%; border-collapse: collapse; font-size: .9rem; }
 th {
@@ -239,6 +255,8 @@ tr:last-child td { border-bottom: 0; }
 td.num, th.num { font-family: var(--mono); text-align: right; white-space: nowrap; }
 td.actions { text-align: right; white-space: nowrap; }
 td.actions form { display: inline; }
+td.actions .action { margin-left: .3rem; }
+td.actions .action.keep { margin-left: .55rem; }
 td .name { font-family: var(--mono); font-size: .84rem; color: var(--ink-soft); }
 td .note { margin-top: .1rem; }
 
@@ -371,7 +389,10 @@ body.wide .loglines { flex: 1; min-height: 12rem; }
   thead { display: none; }
   tr { padding: .5rem 0; border-bottom: 1px solid var(--rule); }
   td { border: 0; padding: .15rem 0; }
-  td.num, td.actions { text-align: left; }
+  td.num { text-align: left; }
+  td.actions { text-align: left; padding-top: .45rem; white-space: normal; }
+  td.actions .action { margin: 0 .3rem .3rem 0; }
+  td.actions .action.keep { margin-left: 0; }
 }
 """
 

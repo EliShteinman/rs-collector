@@ -44,7 +44,7 @@ _CONTENT = template("""
           <form method="post" action="{{ url('/database-logs') }}">
             <input type="hidden" name="analysis" value="{{ analysis }}">
             <input type="hidden" name="database" value="{{ database.uid }}">
-            <button class="quiet" type="submit">Collect its logs</button>
+            <button class="action" type="submit">Collect its logs</button>
           </form>
         </td>
       </tr>
