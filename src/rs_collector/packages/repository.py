@@ -53,7 +53,7 @@ class PackageRepository:
 
     def get(self, name: str) -> StoredPackage:
         directory = self._settings.packages_dir / name
-        if not directory.is_dir():
+        if not self._metadata_path(directory).is_file():
             raise PackageNotFoundError(f"No package named '{name}' is stored")
         return self._stored(directory, self._read_metadata(directory))
 

@@ -103,3 +103,12 @@ def test_list_skips_a_package_with_broken_metadata(repository: PackageRepository
     (broken.directory / "package.json").write_text("{not json", encoding="utf-8")
 
     assert [package.name for package in repository.list()] == ["good"]
+
+
+def test_a_directory_without_metadata_is_not_a_package(
+    repository: PackageRepository, app_settings: AppSettings
+) -> None:
+    (app_settings.storage.packages_dir / "half-written").mkdir(parents=True)
+
+    with pytest.raises(PackageNotFoundError):
+        repository.get("half-written")

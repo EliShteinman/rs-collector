@@ -99,7 +99,8 @@ RSC_WEB_PASSWORD=<the password>
 Every page, file and report is then behind that login, the browser asks for it once per
 session, and a refused attempt is written to the rsc log with the user name that was tried.
 Setting only one of the two variables is refused at startup, so a typo cannot quietly leave
-the interface open.
+the interface open. Put them in `rsc.env` rather than exporting them in your shell: after a
+reboot the crontab starts rsc without your shell, and `rsc.env` is the only place it reads.
 
 With neither variable set the interface has no login: anyone who can reach the port can
 collect, analyze and read everything. rsc then writes a warning to its log and says so on

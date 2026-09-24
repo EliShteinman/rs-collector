@@ -34,7 +34,7 @@ class AnalysisRepository:
 
     def get(self, name: str) -> StoredAnalysis:
         directory = self._settings.analyses_dir / name
-        if not directory.is_dir():
+        if not self._metadata_path(directory).is_file():
             raise AnalysisNotFoundError(f"No analysis named '{name}' is stored")
         return StoredAnalysis(metadata=self._read_metadata(directory), directory=directory)
 
