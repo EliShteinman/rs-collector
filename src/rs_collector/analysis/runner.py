@@ -68,6 +68,7 @@ class RedisScopeRunner:
                 options=options,
                 command=tuple(command),
                 analyzed_at=datetime.now(UTC),
+                runner_pid=os.getpid(),
             )
         )
 

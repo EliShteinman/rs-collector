@@ -272,6 +272,7 @@ td .note { margin-top: .1rem; }
 .tag.running { color: var(--busy); }
 .tag.succeeded { color: var(--good); }
 .tag.failed, .tag.timed_out { color: var(--brand); }
+.tag.interrupted { color: var(--ink-soft); }
 
 .pill {
   display: inline-flex;

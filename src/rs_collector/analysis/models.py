@@ -12,6 +12,7 @@ class AnalysisStatus(StrEnum):
     SUCCEEDED = "succeeded"
     FAILED = "failed"
     TIMED_OUT = "timed_out"
+    INTERRUPTED = "interrupted"
 
 
 class AnalysisMetadata(BaseModel):
@@ -28,6 +29,7 @@ class AnalysisMetadata(BaseModel):
     duration_seconds: float | None = Field(default=None, ge=0)
     status: AnalysisStatus = Field(default=AnalysisStatus.RUNNING)
     exit_status: int | None = Field(default=None)
+    runner_pid: int | None = Field(default=None, description="Process that runs the analyzer")
     pinned: bool = Field(default=False)
 
     def finished(

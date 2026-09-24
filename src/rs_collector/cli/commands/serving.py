@@ -8,5 +8,6 @@ class ServeCommand:
         self._container = container
 
     def execute(self) -> int:
+        self._container.interrupted_runs().mark()
         self._container.web_server().serve_forever()
         return _EXIT_SUCCESS

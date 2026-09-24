@@ -4,6 +4,7 @@ from pathlib import Path
 from rs_collector.analysis.prompt import AnalysisOptionsPrompt
 from rs_collector.analysis.repository import AnalysisRepository
 from rs_collector.analysis.runner import RedisScopeRunner
+from rs_collector.analysis.sweep import InterruptedRuns
 from rs_collector.background.cron_entries import CronEntries
 from rs_collector.background.crontab import CrontabClient, CrontabInstaller, SystemCrontab
 from rs_collector.background.launcher import ServerLauncher
@@ -87,6 +88,9 @@ class Container:
 
     def analyses(self) -> AnalysisRepository:
         return AnalysisRepository(self._settings.storage)
+
+    def interrupted_runs(self) -> InterruptedRuns:
+        return InterruptedRuns(self.analyses())
 
     def pins(self) -> PinService:
         return PinService(self.packages(), self.analyses())

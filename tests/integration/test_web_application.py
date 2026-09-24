@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 from pytest_mock import MockerFixture
 
+from rs_collector.analysis.models import AnalysisStatus
 from rs_collector.analysis.outputs import AnalysisOutputs
 from rs_collector.cli.container import Container
 from rs_collector.jobs.models import JobStatus
@@ -438,3 +439,17 @@ def test_the_analyzer_output_reaches_the_job_log(application: WebApplication, pa
 
     assert "RedisScope starting with" in finished
     assert "100% extracted" in finished
+
+
+def test_an_analysis_left_running_by_a_dead_process_is_shown_as_interrupted(
+    application: WebApplication, container: Container, package: str
+) -> None:
+    job_url = _post(application, "/analyze", f"package={package}&depth=default").headers["Location"]
+    _wait_for_job(application, job_url)
+    stored = container.analyses().list()[0]
+    container.analyses().save(
+        stored.metadata.model_copy(update={"status": AnalysisStatus.RUNNING, "runner_pid": 2**22})
+    )
+    container.interrupted_runs().mark()
+
+    assert ">interrupted<" in _get(application, "/").body.decode()
