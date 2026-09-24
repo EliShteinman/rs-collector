@@ -35,3 +35,16 @@ def test_shipped_logging_file_records_debug_messages(
     LoggerFactory.for_component("configuration").debug("detailed trace")
 
     assert "detailed trace" in (log_dir / "rsc.log").read_text(encoding="utf-8")
+
+
+def test_a_settings_file_from_an_older_release_still_loads(
+    repo_config_paths: ConfigPaths, config_dir: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    shipped = (repo_config_paths.settings_file).read_text(encoding="utf-8")
+    without_the_new_key = "\n".join(
+        line for line in shipped.splitlines() if "auth_realm" not in line
+    )
+    (config_dir / "settings.yml").write_text(without_the_new_key, encoding="utf-8")
+    monkeypatch.setenv("RSC_DATA_ROOT", str(config_dir.parent / "data"))
+
+    assert SettingsLoader(ConfigPaths(config_dir=config_dir)).load().serve.auth_realm == "rsc"
