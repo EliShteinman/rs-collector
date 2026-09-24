@@ -10,6 +10,7 @@ from rs_collector.jobs.models import JobView
 from rs_collector.packages.models import StoredPackage
 from rs_collector.status.models import SystemStatus
 from rs_collector.status.schedule_text import spoken
+from rs_collector.web.navigation import Navigation
 from rs_collector.web.views.layout import page, template
 from rs_collector.web.views.size_text import size
 from rs_collector.web.views.time_text import ago, stamp
@@ -86,6 +87,17 @@ _CONTENT = template("""
     </div>
   </div>
 </section>
+
+{% if navigation.tools|length > 1 %}
+<section class="tools">
+  {% for tool in navigation.tools %}
+  <a class="tool{{ ' here' if navigation.is_here(tool) }}" href="{{ url(tool.path) }}">
+    <h3>{{ tool.name }}</h3>
+    <p>{{ tool.summary }}</p>
+  </a>
+  {% endfor %}
+</section>
+{% endif %}
 
 <section class="panels">
   <div class="panel">
@@ -301,9 +313,11 @@ def render(
     analyses: Sequence[StoredAnalysis],
     links: Mapping[str, AnalysisLinks],
     jobs: Sequence[JobView],
+    navigation: Navigation | None = None,
 ) -> str:
     content = _CONTENT.render(
         url=url,
+        navigation=navigation or Navigation(),
         status=status,
         clusters=clusters,
         packages=packages,
@@ -327,6 +341,7 @@ def render(
         "Collect and analyze",
         Markup(content),
         url,
+        navigation,
         host=f"{status.server.host}:{status.server.port}",
         state="Running" if status.server.is_running else "Foreground only",
         state_kind="up" if status.server.is_running else "down",

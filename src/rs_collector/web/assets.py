@@ -73,6 +73,47 @@ body {
 .masthead .host { font: 400 .82rem/1 var(--mono); color: var(--ink-soft); }
 .masthead .spacer { flex: 1; }
 
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .25rem;
+  margin-left: .5rem;
+}
+
+.nav a {
+  padding: .3rem .7rem;
+  border-radius: 999px;
+  font-size: .86rem;
+  color: var(--ink-soft);
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+
+.nav a:hover { color: var(--ink); border-color: var(--rule); }
+.nav a.here { color: var(--ink); background: var(--page); border-color: var(--rule); }
+
+.tools {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1rem;
+}
+
+.tool {
+  display: block;
+  padding: 1rem 1.15rem;
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--rule);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+  text-decoration: none;
+}
+
+.tool:hover { border-left-color: var(--brand); }
+.tool.here { border-left-color: var(--brand); }
+.tool h3 { margin: 0 0 .25rem; font-size: .95rem; color: var(--ink); }
+.tool p { margin: 0; font-size: .85rem; color: var(--ink-soft); }
+
 main {
   width: 100%;
   padding: 1.5rem;

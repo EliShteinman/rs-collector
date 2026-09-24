@@ -187,6 +187,24 @@ location /rsc/ {
 Collecting a package needs SSH (port 22) from this server to the cluster nodes, which is
 outgoing traffic and unrelated to the proxy.
 
+## Adding another tool
+
+The web interface is a list of features, so a new tool touches only its own files plus one
+line of assembly:
+
+1. Write a controller with a `register(router)` method that adds its own routes, and a
+   `Protocol` naming only the dependencies it needs. The container satisfies it by having
+   those methods — nothing to inherit and nothing to change in the container.
+2. Give it a `TOOL = Tool(name=..., path=..., summary=...)` if it should appear in the
+   navigation and on the console as a card.
+3. Add it to `ConsoleFeatures.all()` in `src/rs_collector/web/console.py`, and to
+   `_IN_THE_NAVIGATION` if it has a `TOOL`.
+
+Routes are matched narrowest first, so a new route cannot be swallowed by an existing one
+that ends in `{path*}`, whatever the order. `SubprocessRunner` streams a command's output
+line by line, and `JobRegistry` turns any such command into a background run with a live
+log page, so a tool that shells out gets both for free.
+
 ## Development
 
 ```bash

@@ -5,6 +5,7 @@ from rs_collector.exceptions.storage import ArtifactNotFoundError
 from rs_collector.runtime.bundle import BundleLocator
 from rs_collector.web import assets
 from rs_collector.web.http import Request, Response
+from rs_collector.web.router import Router
 
 _CSS = "text/css; charset=utf-8"
 _JAVASCRIPT = "text/javascript; charset=utf-8"
@@ -13,11 +14,17 @@ _FONTS = ("plex-sans.woff2", "plex-mono.woff2")
 _FONT_DIRECTORY = ("web", "fonts")
 _ENCODING = "utf-8"
 _IMMUTABLE = {"Cache-Control": "public, max-age=604800, immutable"}
+_GET = "GET"
 
 
 class AssetsController:
     def __init__(self, fonts: Path | None = None) -> None:
         self._fonts = fonts or BundleLocator().bundled(*_FONT_DIRECTORY)
+
+    def register(self, router: Router) -> None:
+        router.add(_GET, "/static/app.css", self.stylesheet)
+        router.add(_GET, "/static/app.js", self.javascript)
+        router.add(_GET, "/static/fonts/{name}", self.font)
 
     def stylesheet(self, _: Request, __: Mapping[str, str]) -> Response:
         return Response.file(assets.CSS.encode(_ENCODING), _CSS)

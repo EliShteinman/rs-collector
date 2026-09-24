@@ -3,6 +3,7 @@ from collections.abc import Callable
 from markupsafe import Markup
 
 from rs_collector.jobs.models import JobView
+from rs_collector.web.navigation import Navigation
 from rs_collector.web.views.layout import page, template
 from rs_collector.web.views.log_html import as_html
 from rs_collector.web.views.time_text import stamp
@@ -30,6 +31,6 @@ _CONTENT = template("""
 """)
 
 
-def render(url: Callable[[str], str], job: JobView) -> str:
+def render(url: Callable[[str], str], job: JobView, navigation: Navigation | None = None) -> str:
     content = _CONTENT.render(url=url, job=job, started=stamp(job.started_at), html=as_html)
-    return page(job.title, Markup(content), url)
+    return page(job.title, Markup(content), url, navigation)

@@ -2,6 +2,7 @@ from collections.abc import Callable
 
 from markupsafe import Markup
 
+from rs_collector.web.navigation import Navigation
 from rs_collector.web.views.layout import page, template
 
 _CONTENT = template("""
@@ -13,6 +14,8 @@ _CONTENT = template("""
 """)
 
 
-def render(url: Callable[[str], str], heading: str, detail: str) -> str:
+def render(
+    url: Callable[[str], str], heading: str, detail: str, navigation: Navigation | None = None
+) -> str:
     content = _CONTENT.render(url=url, heading=heading, detail=detail)
-    return page(heading, Markup(content), url)
+    return page(heading, Markup(content), url, navigation)

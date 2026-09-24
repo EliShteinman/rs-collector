@@ -1,6 +1,7 @@
 from collections.abc import Mapping
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import ClassVar
 
 from rs_collector.exceptions.storage import ArtifactNotFoundError
 from rs_collector.logging_setup.configurator import LoggerFactory
@@ -8,9 +9,12 @@ from rs_collector.web.files import media
 from rs_collector.web.files.log_lines import LogReader
 from rs_collector.web.files.reader import FileReader
 from rs_collector.web.http import Request, Response
+from rs_collector.web.navigation import Navigation, Tool
+from rs_collector.web.router import Router
 from rs_collector.web.views import listing, logview
 
 _ANALYSES_PATH = "/analyses/"
+_GET = "GET"
 _RAW_FLAG = "raw"
 _LIST_FLAG = "list"
 _PLAIN_FLAG = "plain"
@@ -20,18 +24,30 @@ _SLASH = "/"
 
 
 class FilesController:
+    TOOL: ClassVar[Tool] = Tool(
+        name="Stored files",
+        path=_ANALYSES_PATH,
+        summary="Browse every file of every analysis, and read the cluster logs it extracted",
+    )
+
     def __init__(
         self,
         root: Path,
         reader: FileReader,
         logs: LogReader,
         heading: str = "Analyses",
+        navigation: Navigation | None = None,
     ) -> None:
         self._root = root
         self._reader = reader
         self._logs = logs
         self._heading = heading
+        self._navigation = navigation or Navigation()
         self._logger = LoggerFactory.for_component("web.files")
+
+    def register(self, router: Router) -> None:
+        router.add(_GET, "/analyses/{path*}", self.serve)
+        router.add(_GET, "/analyses", self.serve)
 
     def serve(self, request: Request, parameters: Mapping[str, str]) -> Response:
         relative = parameters.get("path", "").strip("/")
@@ -67,6 +83,7 @@ class FilesController:
                 self._parent(relative),
                 own_url=f"{_ANALYSES_PATH}{relative}",
                 has_index=index is not None,
+                navigation=self._navigation.here(request.path),
             )
         )
 
@@ -104,6 +121,7 @@ class FilesController:
                 byte_count=target.stat().st_size,
                 raw_url=f"{_ANALYSES_PATH}{relative}?raw=1",
                 parent_url=self._parent(relative) or _ANALYSES_PATH,
+                navigation=self._navigation.here(request.path),
             )
         )
 

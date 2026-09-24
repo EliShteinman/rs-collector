@@ -2,6 +2,7 @@ from collections.abc import Callable
 
 from markupsafe import Markup
 
+from rs_collector.web.navigation import Navigation
 from rs_collector.web.views.layout import page, template
 
 _HEADING = "A login is needed"
@@ -18,6 +19,6 @@ _CONTENT = template("""
 """)
 
 
-def render(url: Callable[[str], str]) -> str:
+def render(url: Callable[[str], str], navigation: Navigation | None = None) -> str:
     content = _CONTENT.render(heading=_HEADING)
-    return page(_HEADING, Markup(content), url)
+    return page(_HEADING, Markup(content), url, navigation)

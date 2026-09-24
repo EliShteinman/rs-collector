@@ -3,6 +3,8 @@ from collections.abc import Callable
 from jinja2 import Environment, Template
 from markupsafe import Markup
 
+from rs_collector.web.navigation import Navigation
+
 _ENVIRONMENT = Environment(autoescape=True, trim_blocks=True, lstrip_blocks=True)
 
 _PAGE = """<!doctype html>
@@ -16,8 +18,18 @@ _PAGE = """<!doctype html>
 <body class="{{ 'wide' if wide }}">
 <header class="masthead">
   <a class="mark" href="{{ url('/') }}">rsc</a>
-  <span class="host">{{ host }}</span>
+  {% if navigation.tools %}
+  <nav class="nav">
+    {% for tool in navigation.tools %}
+    <a href="{{ url(tool.path) }}" class="{{ 'here' if navigation.is_here(tool) }}"
+       title="{{ tool.summary }}">{{ tool.name }}</a>
+    {% endfor %}
+  </nav>
+  {% endif %}
   <span class="spacer"></span>
+  {% if host %}
+  <span class="host">{{ host }}</span>
+  {% endif %}
   {% if state %}
   <span class="pill {{ state_kind }}">{{ state }}</span>
   {% endif %}
@@ -42,6 +54,7 @@ def page(
     title: str,
     content: Markup,
     url: Callable[[str], str],
+    navigation: Navigation | None = None,
     host: str = "",
     state: str = "",
     state_kind: str = "",
@@ -51,6 +64,7 @@ def page(
         title=title,
         content=content,
         url=url,
+        navigation=navigation or Navigation(),
         host=host,
         state=state,
         state_kind=state_kind,

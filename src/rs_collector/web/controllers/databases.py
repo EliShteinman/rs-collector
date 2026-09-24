@@ -1,20 +1,29 @@
 from collections.abc import Mapping
 from pathlib import Path
+from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from rs_collector.analysis.models import StoredAnalysis
 from rs_collector.analysis.outputs import AnalysisOutputs
+from rs_collector.analysis.repository import AnalysisRepository
 from rs_collector.dblogs.models import DatabaseLogs
 from rs_collector.dblogs.service import DatabaseLogService
 from rs_collector.exceptions.dblogs import NoLogsForDatabaseError
 from rs_collector.exceptions.web import BadRequestError
-from rs_collector.web.context import WebContext
 from rs_collector.web.http import Request, Response
+from rs_collector.web.navigation import Navigation
+from rs_collector.web.router import Router
 from rs_collector.web.views import databases as view
 
 _ANALYSES_PATH = "/analyses/"
 _OUTPUT_DIR = "rsc_database_logs"
+_GET = "GET"
+_POST = "POST"
+
+
+class AnalysisContext(Protocol):
+    def analyses(self) -> AnalysisRepository: ...
 
 
 class DatabaseLogsRequest(BaseModel):
@@ -34,21 +43,34 @@ class DatabaseLogsRequest(BaseModel):
 
 
 class DatabasesController:
-    def __init__(self, container: WebContext) -> None:
-        self._container = container
+    def __init__(self, context: AnalysisContext, navigation: Navigation | None = None) -> None:
+        self._context = context
+        self._navigation = navigation or Navigation()
+
+    def register(self, router: Router) -> None:
+        router.add(_GET, "/analyses/{name}/databases", self.show)
+        router.add(_POST, "/database-logs", self.collect)
 
     def show(self, request: Request, parameters: Mapping[str, str]) -> Response:
-        analysis = self._container.analyses().get(parameters["name"])
+        analysis = self._context.analyses().get(parameters["name"])
         service = self._service(analysis)
         if service is None:
             raise NoLogsForDatabaseError(
                 f"{analysis.name} holds no extracted support package to read logs from"
             )
-        return Response.html(view.render(request.url, analysis.name, service.databases(), asked=""))
+        return Response.html(
+            view.render(
+                request.url,
+                analysis.name,
+                service.databases(),
+                asked="",
+                navigation=self._navigation.here(request.path),
+            )
+        )
 
     def collect(self, request: Request, _: Mapping[str, str]) -> Response:
         asked = DatabaseLogsRequest.parse(request.form)
-        analysis = self._container.analyses().get(asked.analysis)
+        analysis = self._context.analyses().get(asked.analysis)
         service = self._service(analysis)
         if service is None:
             raise NoLogsForDatabaseError(
@@ -65,6 +87,7 @@ class DatabasesController:
                 file_links={
                     str(file.path): self._url(analysis, file.path) for file in logs.package_files
                 },
+                navigation=self._navigation.here(request.path),
             )
         )
 

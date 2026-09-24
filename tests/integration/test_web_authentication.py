@@ -7,18 +7,24 @@ from rs_collector.jobs.registry import JobRegistry
 from rs_collector.settings.credentials import WebCredentials
 from rs_collector.settings.paths import ConfigPaths
 from rs_collector.web.application import WebApplication
+from rs_collector.web.console import ConsoleFeatures
 from rs_collector.web.http import Request, Response
-from rs_collector.web.security.access import BasicAccess
+from rs_collector.web.security.access import AccessGuard, BasicAccess
 
 pytestmark = pytest.mark.integration
 
 _CHALLENGE_HEADER = "WWW-Authenticate"
 
 
+def _application(container: Container, guard: AccessGuard | None = None) -> WebApplication:
+    features = ConsoleFeatures(container, container.settings, JobRegistry())
+    return WebApplication(features.all(), guard=guard, navigation=features.navigation())
+
+
 @pytest.fixture
 def application(container: Container) -> WebApplication:
     credentials = WebCredentials(web_user="ops", web_password="letmein")
-    return WebApplication(container, JobRegistry(), BasicAccess(credentials))
+    return _application(container, BasicAccess(credentials))
 
 
 def _get(application: WebApplication, path: str, authorization: str | None = None) -> Response:
@@ -63,7 +69,7 @@ def test_an_unknown_path_is_refused_before_it_is_resolved(application: WebApplic
 
 
 def test_the_open_console_reports_that_it_asks_for_no_login(container: Container) -> None:
-    body = _get(WebApplication(container, JobRegistry()), "/").body.decode()
+    body = _get(_application(container), "/").body.decode()
 
     assert "Open to the network" in body
 
@@ -73,6 +79,6 @@ def test_the_protected_console_names_the_user(
 ) -> None:
     monkeypatch.setenv("RSC_WEB_USER", "ops")
     monkeypatch.setenv("RSC_WEB_PASSWORD", "letmein")
-    application = WebApplication(Container(paths=web_paths), JobRegistry())
+    application = _application(Container(paths=web_paths))
 
     assert "Asks for a login" in _get(application, "/", _login()).body.decode()

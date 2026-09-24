@@ -4,6 +4,7 @@ from datetime import datetime
 from markupsafe import Markup
 from pydantic import BaseModel, ConfigDict, Field
 
+from rs_collector.web.navigation import Navigation
 from rs_collector.web.views.layout import page, template
 from rs_collector.web.views.size_text import size
 from rs_collector.web.views.time_text import stamp
@@ -68,6 +69,7 @@ def render(
     parent: str | None,
     own_url: str = "",
     has_index: bool = False,
+    navigation: Navigation | None = None,
 ) -> str:
     content = _CONTENT.render(
         url=url,
@@ -79,4 +81,4 @@ def render(
         size=size,
         stamp=stamp,
     )
-    return page(heading, Markup(content), url)
+    return page(heading, Markup(content), url, navigation)

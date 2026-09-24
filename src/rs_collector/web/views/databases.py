@@ -3,6 +3,7 @@ from collections.abc import Callable, Sequence
 from markupsafe import Markup
 
 from rs_collector.dblogs.models import Database, DatabaseLogs
+from rs_collector.web.navigation import Navigation
 from rs_collector.web.views.layout import page, template
 from rs_collector.web.views.size_text import size
 from rs_collector.web.views.time_text import stamp
@@ -121,10 +122,14 @@ _RESULT = template("""
 
 
 def render(
-    url: Callable[[str], str], analysis: str, databases: Sequence[Database], asked: str = ""
+    url: Callable[[str], str],
+    analysis: str,
+    databases: Sequence[Database],
+    asked: str = "",
+    navigation: Navigation | None = None,
 ) -> str:
     content = _CONTENT.render(url=url, analysis=analysis, databases=databases, asked=asked)
-    return page("Database logs", Markup(content), url)
+    return page("Database logs", Markup(content), url, navigation)
 
 
 def render_result(
@@ -134,6 +139,7 @@ def render_result(
     links: dict[str, str],
     directory: str,
     file_links: dict[str, str] | None = None,
+    navigation: Navigation | None = None,
 ) -> str:
     content = _RESULT.render(
         url=url,
@@ -145,4 +151,6 @@ def render_result(
         size=size,
         stamp=stamp,
     )
-    return page(f"Logs of {logs.database.name or logs.database.uid}", Markup(content), url)
+    return page(
+        f"Logs of {logs.database.name or logs.database.uid}", Markup(content), url, navigation
+    )

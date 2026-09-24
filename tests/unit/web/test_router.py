@@ -4,7 +4,7 @@ import pytest
 
 from rs_collector.exceptions.web import RouteNotFoundError
 from rs_collector.web.http import Request, Response
-from rs_collector.web.router import Router
+from rs_collector.web.router import Handler, Router
 
 pytestmark = pytest.mark.unit
 
@@ -56,3 +56,26 @@ def test_a_wrong_method_is_not_matched(router: Router) -> None:
 def test_an_unknown_path_is_reported(router: Router) -> None:
     with pytest.raises(RouteNotFoundError):
         router.resolve(_request("GET", "/nothing"))
+
+
+def _named(name: str) -> Handler:
+    def handler(_: Request, __: Mapping[str, str]) -> Response:
+        return Response.html(name)
+
+    return handler
+
+
+def test_a_narrow_route_wins_over_one_added_before_it_that_catches_everything() -> None:
+    router = Router()
+    router.add("GET", "/analyses/{path*}", _named("files"))
+    router.add("GET", "/analyses/{name}/databases", _named("databases"))
+
+    assert router.resolve(_request("GET", "/analyses/run-1/databases")).body == b"databases"
+
+
+def test_the_catching_route_still_serves_everything_else() -> None:
+    router = Router()
+    router.add("GET", "/analyses/{path*}", _named("files"))
+    router.add("GET", "/analyses/{name}/databases", _named("databases"))
+
+    assert router.resolve(_request("GET", "/analyses/run-1/report.html")).body == b"files"

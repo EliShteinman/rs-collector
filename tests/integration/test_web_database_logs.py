@@ -35,7 +35,7 @@ def analysis_with_package(container: Container, support_package: object) -> str:
 
 @pytest.fixture
 def application(container: Container) -> WebApplication:
-    return WebApplication(container, JobRegistry())
+    return container.web_application(JobRegistry())
 
 
 def _get(application: WebApplication, path: str) -> Response:

@@ -19,7 +19,7 @@ _TIMEOUT_SECONDS = 10
 
 @pytest.fixture
 def application(container: Container) -> WebApplication:
-    return WebApplication(container, JobRegistry())
+    return container.web_application(JobRegistry())
 
 
 def _get(application: WebApplication, path: str, query: str = "") -> Response:

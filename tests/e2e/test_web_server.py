@@ -11,9 +11,11 @@ import pytest
 
 from rs_collector.cli.container import Container
 from rs_collector.jobs.models import JobStatus
+from rs_collector.jobs.registry import JobRegistry
 from rs_collector.settings.credentials import WebCredentials
 from rs_collector.settings.models import ServeSettings
 from rs_collector.web.application import WebApplication
+from rs_collector.web.console import ConsoleFeatures
 from rs_collector.web.security.access import BasicAccess
 from rs_collector.web.server import WebServer
 
@@ -43,7 +45,7 @@ def _serve_settings(port: int) -> ServeSettings:
 
 @pytest.fixture
 def base_url(container: Container) -> Iterator[str]:
-    server = WebServer(WebApplication(container), _serve_settings(_free_port()))
+    server = WebServer(container.web_application(), _serve_settings(_free_port()))
     with server.running() as port:
         yield f"http://127.0.0.1:{port}"
 
@@ -111,7 +113,9 @@ def test_a_large_file_arrives_whole_over_http(base_url: str, container: Containe
 @pytest.fixture
 def protected_url(container: Container) -> Iterator[str]:
     guard = BasicAccess(WebCredentials(web_user="ops", web_password="letmein"))
-    server = WebServer(WebApplication(container, guard=guard), _serve_settings(_free_port()))
+    features = ConsoleFeatures(container, container.settings, JobRegistry())
+    application = WebApplication(features.all(), guard=guard, navigation=features.navigation())
+    server = WebServer(application, _serve_settings(_free_port()))
     with server.running() as port:
         yield f"http://127.0.0.1:{port}"
 

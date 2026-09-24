@@ -3,6 +3,7 @@ from collections.abc import Callable
 from markupsafe import Markup
 
 from rs_collector.web.files.log_lines import LogContent
+from rs_collector.web.navigation import Navigation
 from rs_collector.web.views.layout import page, template
 from rs_collector.web.views.log_html import as_html
 from rs_collector.web.views.size_text import size
@@ -55,6 +56,7 @@ def render(
     byte_count: int,
     raw_url: str,
     parent_url: str,
+    navigation: Navigation | None = None,
 ) -> str:
     markup = _CONTENT.render(
         url=url,
@@ -66,4 +68,4 @@ def render(
         size=size,
         html=as_html,
     )
-    return page(name, Markup(markup), url, wide=True)
+    return page(name, Markup(markup), url, navigation, wide=True)

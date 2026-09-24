@@ -1,12 +1,19 @@
 from collections.abc import Mapping
+from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from rs_collector.exceptions.web import BadRequestError
-from rs_collector.web.context import WebContext
+from rs_collector.retention.pin import PinService
 from rs_collector.web.http import Request, Response
+from rs_collector.web.router import Router
 
 _HOME = "/"
+_POST = "POST"
+
+
+class PinContext(Protocol):
+    def pins(self) -> PinService: ...
 
 
 class KeepRequest(BaseModel):
@@ -23,13 +30,17 @@ class KeepRequest(BaseModel):
 
 
 class RetentionController:
-    def __init__(self, container: WebContext) -> None:
-        self._container = container
+    def __init__(self, context: PinContext) -> None:
+        self._context = context
+
+    def register(self, router: Router) -> None:
+        router.add(_POST, "/keep", self.keep)
+        router.add(_POST, "/release", self.release)
 
     def keep(self, request: Request, _: Mapping[str, str]) -> Response:
-        self._container.pins().pin(KeepRequest.parse(request.form).name)
+        self._context.pins().pin(KeepRequest.parse(request.form).name)
         return Response.redirect(request.url(_HOME))
 
     def release(self, request: Request, _: Mapping[str, str]) -> Response:
-        self._container.pins().unpin(KeepRequest.parse(request.form).name)
+        self._context.pins().unpin(KeepRequest.parse(request.form).name)
         return Response.redirect(request.url(_HOME))

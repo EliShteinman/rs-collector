@@ -19,6 +19,7 @@ from rs_collector.inventory.repository import (
     InventoryRepository,
     YamlInventoryRepository,
 )
+from rs_collector.jobs.registry import JobRegistry
 from rs_collector.logging_setup.configurator import LoggingConfigurator
 from rs_collector.packages.repository import PackageRepository
 from rs_collector.packages.selector import InteractivePackageSelector
@@ -39,6 +40,7 @@ from rs_collector.settings.models import AppSettings
 from rs_collector.settings.paths import ConfigPaths, ConfigPathsResolver
 from rs_collector.status.service import StatusService
 from rs_collector.web.application import WebApplication
+from rs_collector.web.console import ConsoleFeatures
 from rs_collector.web.security.access import AccessGuard, access_guard
 from rs_collector.web.server import WebServer
 from rs_collector.workflows.analyze import AnalyzeWorkflow
@@ -137,7 +139,19 @@ class Container:
         return SystemCrontab()
 
     def web_server(self) -> WebServer:
-        return WebServer(WebApplication(self), self._settings.serve)
+        return WebServer(self.web_application(), self._settings.serve)
+
+    def web_application(self, jobs: JobRegistry | None = None) -> WebApplication:
+        serve = self._settings.serve
+        features = ConsoleFeatures(
+            self, self._settings, jobs or JobRegistry(serve.max_jobs, serve.max_job_lines)
+        )
+        return WebApplication(
+            features.all(),
+            guard=self.access_guard(),
+            realm=serve.auth_realm,
+            navigation=features.navigation(),
+        )
 
     def analyze_workflow(self) -> AnalyzeWorkflow:
         return AnalyzeWorkflow(

@@ -19,6 +19,7 @@ from rs_collector.remote.cluster_connector import ClusterConnector
 from rs_collector.settings.credentials import SshCredentials
 from rs_collector.settings.models import AppSettings
 from rs_collector.web.application import WebApplication
+from rs_collector.web.controllers.jobs import JobsController
 from rs_collector.web.http import Request
 from rs_collector.web.security.access import AccessGuard, OpenAccess
 from rs_collector.workflows.analyze import AnalyzeWorkflow
@@ -111,7 +112,9 @@ def session(app_settings: AppSettings) -> FakeSshSession:
 def application(app_settings: AppSettings, session: FakeSshSession) -> WebApplication:
     for directory in (app_settings.storage.packages_dir, app_settings.storage.locks_dir):
         directory.mkdir(parents=True, exist_ok=True)
-    return WebApplication(FakeContext(app_settings, session, ScriptedConsole([])), JobRegistry())
+    jobs = JobRegistry()
+    context = FakeContext(app_settings, session, ScriptedConsole([]))
+    return WebApplication((JobsController(context, jobs),))
 
 
 def _collect(application: WebApplication, cluster: str = "c1.example.com") -> str:
