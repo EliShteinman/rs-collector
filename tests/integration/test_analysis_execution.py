@@ -105,9 +105,10 @@ def test_the_metadata_survives_a_failed_run(
     assert AnalysisRepository(app_settings.storage).list()[0].metadata.exit_status == 3
 
 
-_TALKATIVE_ANALYZER = """#!/bin/sh
+_HELD_OPEN_SECONDS = 1
+_TALKATIVE_ANALYZER = f"""#!/bin/sh
 echo "starting"
-sleep 0.4
+sleep {_HELD_OPEN_SECONDS}
 echo "finished"
 mkdir -p redisscope_html
 """
@@ -163,11 +164,10 @@ def test_the_output_arrives_while_the_analyzer_still_runs(
         on_line=lambda _, __: arrived.append(time.monotonic()),
     )
 
-    started = time.monotonic()
     runner.analyze(package, AnalysisOptions())
     finished = time.monotonic()
 
-    assert arrived[0] - started < (finished - started) / 2
+    assert finished - arrived[0] > _HELD_OPEN_SECONDS / 2
 
 
 def test_an_analyzer_that_never_finishes_times_out(

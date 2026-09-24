@@ -91,3 +91,11 @@ def test_nothing_to_sweep_reports_nothing(repository: AnalysisRepository) -> Non
     _stored(repository, "done", AnalysisStatus.SUCCEEDED)
 
     assert InterruptedRuns(repository).mark() == ()
+
+
+def test_an_abandoned_run_gets_no_made_up_duration(repository: AnalysisRepository) -> None:
+    _stored(repository, "abandoned", AnalysisStatus.RUNNING, _DEAD_PID)
+
+    InterruptedRuns(repository).mark()
+
+    assert repository.get("abandoned").metadata.duration_seconds is None

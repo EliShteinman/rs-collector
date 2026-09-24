@@ -34,4 +34,6 @@ class InterruptedRuns:
 
 
 def _interrupted(metadata: AnalysisMetadata) -> AnalysisMetadata:
-    return metadata.finished(AnalysisStatus.INTERRUPTED, datetime.now(UTC), exit_status=None)
+    return metadata.model_copy(
+        update={"status": AnalysisStatus.INTERRUPTED, "finished_at": datetime.now(UTC)}
+    )
